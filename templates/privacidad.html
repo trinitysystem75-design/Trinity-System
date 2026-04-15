@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Estilo Gaming / Glassmorphism para consistencia visual */
+    .legal-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 40px;
+        background: rgba(22, 27, 34, 0.95);
+        border: 1px solid #30363d;
+        backdrop-filter: blur(15px);
+        border-radius: 1rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        color: #c9d1d9;
+        line-height: 1.7;
+    }
+
+    h1, h2, h3 {
+        color: #3b82f6; /* Tu azul característico */
+        text-transform: uppercase;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+    }
+
+    hr {
+        border-color: #30363d;
+        margin: 20px 0;
+    }
+
+    strong { color: #ffffff; }
+    
+    a { color: #3b82f6; text-decoration: none; transition: 0.3s; }
+    a:hover { color: #60a5fa; text-decoration: underline; }
+</style>
+
+<div class="legal-container">
+    <h1 style="text-align: center; font-size: 2rem;">Política de Privacidad</h1>
+    <h2 style="text-align: center; font-size: 1rem; color: #8b949e;">Trinity System 75</h2>
+    <p style="text-align: center; font-size: 0.8rem; font-style: italic;">Fecha de última actualización: 12 de abril de 2026.</p>
+    <hr>
+
+    <h3>1. Introducción</h3>
+    <p>En <strong>Trinity System 75</strong>, valoramos su privacidad. Esta política explica qué información recopilamos, cómo la usamos y cómo la protegemos cuando usted utiliza nuestra plataforma.</p>
+
+    <h3>2. Información que Recopilamos</h3>
+    <p>Recopilamos únicamente la información necesaria para brindarle un servicio de calidad:</p>
+    <ul style="list-style-type: square; padding-left: 20px;">
+        <li><strong>Datos de registro:</strong> Nombre y correo electrónico proporcionado al crear su cuenta.</li>
+        <li><strong>Datos de uso:</strong> Información técnica sobre cómo interactúa con nuestra plataforma (dirección IP, tipo de navegador) para mejorar su experiencia.</li>
+    </ul>
+
+    <h3>3. Uso de la Información</h3>
+    <p>Utilizamos sus datos exclusivamente para:</p>
+    <ul style="list-style-type: square; padding-left: 20px;">
+        <li>Gestionar su cuenta y brindarle acceso a nuestras herramientas de trading.</li>
+        <li>Enviar notificaciones importantes sobre el estado de su cuenta o servicios.</li>
+        <li>Responder a sus solicitudes de soporte técnico.</li>
+    </ul>
+
+    <h3>4. Protección y Seguridad</h3>
+    <p>Trinity System 75 <strong>no vende, alquila ni intercambia</strong> sus datos personales con terceros. Implementamos medidas de seguridad técnicas para proteger su información contra acceso no autorizado, alteración o divulgación.</p>
+
+    <h3>5. Cookies</h3>
+    <p>Nuestra plataforma utiliza cookies esenciales para mantener su sesión activa y asegurar que el sitio funcione correctamente. Usted puede configurar su navegador para rechazarlas, aunque esto podría limitar algunas funcionalidades.</p>
+
+    <h3>6. Sus Derechos</h3>
+    <p>Usted tiene derecho a acceder, corregir o solicitar la eliminación de su información personal en cualquier momento. Si desea ejercer estos derechos, comuníquese con nosotros a través de: <a href="mailto:soporte@trinity-system75.com">soporte@trinity-system75.com</a>.</p>
+
+    <h3>7. Cambios en esta Política</h3>
+    <p>Podemos actualizar esta Política de Privacidad periódicamente. Cualquier cambio se publicará en esta página y le notificaremos si las modificaciones son significativas.</p>
+</div>
+{% endblock %}

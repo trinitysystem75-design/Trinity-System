@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trinity Systems | Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0d1117; color: #f0f6fc; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #161b22; border-right: 1px solid #30363d; height: 100vh; position: fixed; width: 260px; }
+        .main-content { margin-left: 260px; padding: 40px; }
+        .card-pro { background: #161b22; border: 1px solid #30363d; border-radius: 12px; }
+        .nav-link { transition: 0.2s; border-radius: 8px; }
+        .nav-link:hover { background: #21262d; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex">
+
+    <div class="sidebar p-6 flex flex-col justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-blue-500 italic mb-10 tracking-tighter uppercase">Trinity Systems</h1>
+            <nav class="space-y-2">
+                <a href="/dashboard" class="nav-link flex items-center p-3 text-sm font-bold text-blue-400 bg-gray-800">📊 Dashboard</a>
+                <a href="/mi_red" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">👥 Mi Red</a>
+                <a href="/depositar" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">💰 Depositar</a>
+                <a href="/retirar" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">🏧 Retiros</a>
+            </nav>
+        </div>
+
+        <div class="card-pro p-4 bg-blue-900/10 border-blue-500/30">
+            <p class="text-[9px] font-bold text-blue-400 uppercase mb-2">Tu Enlace de Invitación</p>
+            <input type="text" value="{{ link_ref }}" id="refLink" readonly class="w-full bg-black text-[10px] p-2 rounded border border-gray-700 mb-2 font-mono outline-none">
+            <button onclick="copyRef()" class="w-full bg-blue-600 hover:bg-blue-500 text-[10px] font-bold py-2 rounded uppercase transition">Copiar Link</button>
+        </div>
+    </div>
+
+    <div class="main-content w-full">
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="mb-4 p-4 bg-blue-600/20 border border-blue-500 text-blue-400 text-xs font-bold rounded-lg uppercase italic">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h2 class="text-2xl font-bold italic uppercase">Terminal de Trading</h2>
+                <p class="text-gray-500 text-[10px] uppercase tracking-widest">Bienvenido, {{ current_user.username }}</p>
+            </div>
+            <div class="flex items-center gap-4 text-xs">
+               <span class="text-blue-500 font-bold tracking-widest uppercase text-[10px] border border-blue-500/30 px-3 py-1 rounded-full bg-blue-900/10 shadow-[0_0_10px_rgba(59,130,246,0.3)]"> ID: {{ current_user.id }}</span>
+                <a href="/logout" class="bg-red-600/20 text-red-500 px-4 py-1 rounded border border-red-500/50 font-bold hover:bg-red-600 hover:text-white transition">LOGOUT</a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <div class="card-pro p-5">
+                <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Inversión (Capital)</p>
+                <h3 class="text-2xl font-black mt-1 text-white font-mono">$ {{ "%.2f"|format(current_user.balance) }}</h3>
+            </div>
+            <div class="card-pro p-5 border-b-2 border-green-500">
+                <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">ROI Retirable</p>
+                <h3 class="text-2xl font-black mt-1 text-green-400 font-mono">$ {{ "%.2f"|format(current_user.roi_total) }}</h3>
+            </div>
+            <div class="card-pro p-5">
+                <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Equipo Directo</p>
+                <h3 class="text-2xl font-black mt-1 text-purple-400">{{ conteo_red }}</h3>
+            </div>
+            <div class="card-pro p-5 border-b-2 border-yellow-500">
+                <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest">Ganancia Hoy (1.2%)</p>
+                <h3 class="text-2xl font-black mt-1 text-yellow-500 font-mono">$ {{ "%.2f"|format(ganancia_hoy) }}</h3>
+            </div>
+        </div>
+
+        <div class="card-pro p-6 mb-8 border-l-4 {% if current_user.deposito_status == 'ACTIVO' %}border-green-500{% elif current_user.deposito_status == 'PENDIENTE' %}border-yellow-500{% else %}border-red-500{% endif %}">
+            <h4 class="text-sm font-bold uppercase mb-4 tracking-widest">Estado de Verificación</h4>
+            {% if current_user.deposito_status == 'INACTIVO' %}
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-xs text-red-400 italic">⚠️ CUENTA INACTIVA: Debes fondear un mínimo de $30.00 USD para activar el bot.</p>
+                    <a href="/depositar" class="bg-blue-600 text-white text-[10px] font-bold px-6 py-2 rounded-lg hover:bg-blue-500 transition">IR A DEPOSITAR</a>
+                </div>
+            {% elif current_user.deposito_status == 'PENDIENTE' %}
+                <p class="text-xs text-yellow-400 italic font-bold">⏳ VERIFICACIÓN PENDIENTE: Tu comprobante está en revisión por el staff de Trinity.</p>
+            {% else %}
+                <p class="text-xs text-green-400 font-bold uppercase italic animate-pulse text-[10px]">● Operando en vivo: XAUUSD | EA TRINITY GOLD V7</p>
+            {% endif %}
+        </div>
+
+        <div class="card-pro overflow-hidden mb-8" style="height: 400px;">
+            <div id="tradingview_x" style="height:100%;"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+            <script type="text/javascript">
+                new TradingView.widget({
+                    "autosize": true, "symbol": "OANDA:XAUUSD", "interval": "H1",
+                    "theme": "dark", "style": "1", "locale": "es", "container_id": "tradingview_x"
+                });
+            </script>
+        </div>
+
+        <div class="card-pro overflow-hidden">
+            <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/30">
+                <h4 class="text-xs font-black uppercase tracking-widest text-blue-400 italic">Auditoría de Movimientos</h4>
+                <span class="text-[9px] bg-gray-800 px-2 py-1 rounded text-gray-500 font-bold uppercase">XAUUSD / TRINITY SYSTEMS</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-[11px]">
+                    <thead class="bg-gray-900/50 text-gray-500 uppercase font-mono">
+                        <tr>
+                            <th class="p-4">Fecha</th>
+                            <th class="p-4">Operación</th>
+                            <th class="p-4">Monto</th>
+                            <th class="p-4">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-800">
+                        {% for tx in historial %}
+                        <tr class="hover:bg-gray-800/30 transition">
+                            <td class="p-4 text-gray-400 font-mono italic">{{ tx.fecha }}</td>
+                            <td class="p-4 font-black italic">
+                                {% if tx.tipo == 'DEPÓSITO' %} <span class="text-blue-400 uppercase">DEPÓSITO</span>
+                                {% elif tx.tipo == 'RETIRO' %} <span class="text-red-400 uppercase">RETIRO</span>
+                                {% elif tx.tipo == 'BONO_RED' %} <span class="text-purple-400 uppercase">BONO DE RED (10%)</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-4 font-black text-white font-mono">$ {{ "%.2f"|format(tx.monto) }}</td>
+                            <td class="p-4">
+                                {% if tx.estado == 'APROBADO' %}
+                                    <span class="text-green-500 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 text-[9px] font-bold uppercase italic">Completado</span>
+                                {% elif tx.estado == 'PENDIENTE' %}
+                                    <span class="text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20 text-[9px] font-bold uppercase italic">Procesando...</span>
+                                {% else %}
+                                    <span class="text-red-500 bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20 text-[9px] font-bold uppercase italic">Rechazado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="4" class="p-10 text-center text-gray-600 italic tracking-widest text-[10px] uppercase">
+                                [ No se detectan transacciones en la red principal ]
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer class="mt-10 py-6 border-t border-gray-800 text-center">
+            <div class="space-x-4 text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                <a href="/terminos" class="hover:text-blue-400 transition">Términos y Condiciones</a>
+                <span>|</span>
+                <a href="/privacidad" class="hover:text-blue-400 transition">Política de Privacidad</a>
+            </div>
+            <p class="text-[9px] text-gray-600 mt-2">© 2026 Trinity Systems. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyRef() {
+            var copyText = document.getElementById("refLink");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand("copy");
+            alert("Enlace de referido copiado. ¡Listo para invitar!");
+        }
+    </script>
+</body>
+</html>

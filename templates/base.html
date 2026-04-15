@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trinity System 75 | Panel Profesional</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/red">Mi Red</a>
+        <a href="/retiro">Retiros</a>
+    </nav>
+
+    <div class="content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Trinity System 75. Todos los derechos reservados.</p>
+        <nav>
+            <a href="{{ url_for('terminos') }}">Términos y Condiciones</a> | 
+            <a href="{{ url_for('privacidad') }}">Política de Privacidad</a> | 
+            <a href="mailto:soporte@trinity-system75.com">Contacto</a>
+        </nav>
+    </footer>
+</body>
+</html>

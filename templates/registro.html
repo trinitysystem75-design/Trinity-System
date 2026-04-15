@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trinity Systems | Registro</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), 
+                        url('https://images.unsplash.com/photo-1611974717482-9825116a8ad0?q=80&w=2070&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+            padding: 20px;
+        }
+        .glass-card {
+            background: rgba(22, 27, 34, 0.95);
+            border: 1px solid #30363d;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        input {
+            background-color: #0d1117 !important;
+            color: #ffffff !important;
+            border: 1px solid #30363d !important;
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus {
+            -webkit-text-fill-color: white !important;
+            -webkit-box-shadow: 0 0 0px 1000px #0d1117 inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        input::placeholder {
+            color: #484f58 !important;
+        }
+
+        input:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card p-10 rounded-2xl w-full max-w-md border-t-4 border-blue-500">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-black text-blue-500 italic uppercase tracking-tighter">Trinity Systems</h1>
+            <p class="text-gray-400 text-[10px] mt-2 uppercase tracking-widest font-bold">Crea tu terminal de inversión</p>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mb-4 p-3 bg-red-900/50 border border-red-700 text-red-200 text-xs text-center rounded-xl">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form action="/crear_usuario?ref={{ ref_id if ref_id else '' }}" method="POST" class="space-y-5">
+            
+            <div>
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider ml-1">Usuario</label>
+                <input type="text" name="username" placeholder="Tu apodo de trader" required 
+                       class="w-full rounded-xl p-3 text-sm outline-none transition-all duration-200">
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider ml-1">Email</label>
+                <input type="email" name="email" placeholder="correo@ejemplo.com" required 
+                       class="w-full rounded-xl p-3 text-sm outline-none transition-all duration-200">
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black text-gray-500 uppercase tracking-wider ml-1">Contraseña</label>
+                <input type="password" name="password" placeholder="••••••••" required 
+                       class="w-full rounded-xl p-3 text-sm outline-none transition-all duration-200">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-xl transition-all duration-300 uppercase text-xs tracking-[0.2em] shadow-lg shadow-blue-900/20">
+                Comenzar ahora
+            </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-gray-800 text-center">
+            <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">
+                ¿Ya tienes cuenta? <a href="/login" class="text-blue-400 hover:text-blue-300 ml-1 transition">Inicia sesión</a>
+            </p>
+        </div>
+    </div>
+
+    <footer class="mt-12 text-center">
+        <div class="space-x-4 text-[9px] text-gray-500 uppercase font-bold tracking-widest">
+            <a href="/terminos" class="hover:text-blue-400 transition">Términos y Condiciones</a>
+            <span class="text-gray-700">|</span>
+            <a href="/privacidad" class="hover:text-blue-400 transition">Política de Privacidad</a>
+        </div>
+        <p class="text-[8px] text-gray-700 mt-2 uppercase">© 2026 Trinity Systems. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>

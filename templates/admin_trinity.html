@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trinity | Root Command Center</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0d1117; color: #f0f6fc; font-family: 'Inter', sans-serif; }
+        .card-pro { background: #161b22; border: 1px solid #30363d; border-radius: 12px; transition: 0.3s; }
+        .card-pro:hover { border-color: #3b82f6; }
+        .status-badge { font-size: 9px; padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
+        .btn-action { transition: 0.2s; cursor: pointer; }
+        .btn-action:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="flex justify-between items-end mb-10 border-b border-gray-800 pb-8">
+            <div>
+                <h1 class="text-3xl font-black text-blue-500 italic tracking-tighter uppercase">Trinity Root Center</h1>
+                <p class="text-gray-500 text-[10px] tracking-[0.4em] mt-1">SISTEMA DE CONTROL TOTAL XAUUSD</p>
+            </div>
+            <div class="text-right">
+                <p class="text-[10px] text-gray-400 font-bold uppercase">Admin: <span class="text-blue-400">{{ current_user.username }}</span></p>
+                <a href="/dashboard" class="text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/50 px-4 py-1 rounded mt-2 inline-block font-bold hover:bg-blue-600 hover:text-white">SALIR A DASHBOARD</a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="card-pro p-6 border-l-4 border-green-500 bg-green-500/5">
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Capital en Gestión (Broker)</p>
+                <h3 class="text-2xl font-black font-mono text-white">${{ "%.2f"|format(capital_total) }}</h3>
+            </div>
+            <div class="card-pro p-6 border-l-4 border-blue-500 bg-blue-500/5">
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">ROI Pendiente de Retiro</p>
+                <h3 class="text-2xl font-black font-mono text-white">${{ "%.2f"|format(roi_por_pagar) }}</h3>
+            </div>
+            <div class="card-pro p-6 border-l-4 border-purple-500 bg-purple-500/5">
+                <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Usuarios Activos</p>
+                <h3 class="text-2xl font-black font-mono text-white">{{ usuarios|length }}</h3>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            
+            <div class="space-y-4">
+                <h2 class="text-xs font-black text-yellow-500 uppercase tracking-widest flex items-center">
+                    <span class="mr-2">💳</span> Depósitos Pendientes
+                </h2>
+                <div class="card-pro overflow-hidden">
+                    <table class="w-full text-[11px] text-left">
+                        <thead class="bg-gray-900/80 text-gray-500 uppercase italic">
+                            <tr>
+                                <th class="p-4">Usuario</th>
+                                <th class="p-4">Monto</th>
+                                <th class="p-4">Evidencia</th>
+                                <th class="p-4 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for pago in pagos %}
+                            <tr class="hover:bg-gray-800/30">
+                                <td class="p-4 font-bold text-blue-300">{{ pago.dueno.username }}</td>
+                                <td class="p-4 font-mono font-bold text-green-400">${{ "%.2f"|format(pago.monto) }}</td>
+                                <td class="p-4">
+                                    <a href="{{ url_for('static', filename='comprobantes/' + pago.comprobante) }}" target="_blank" class="bg-gray-800 px-2 py-1 rounded text-[9px] hover:text-blue-400">VER CAPTURA</a>
+                                </td>
+                                <td class="p-4 flex justify-center gap-2">
+                                    <form action="/aprobar_pago/{{ pago.id }}" method="POST">
+                                        <button class="bg-green-600 text-white px-3 py-1 rounded font-black uppercase text-[9px] btn-action">OK</button>
+                                    </form>
+                                    <form action="/rechazar_pago/{{ pago.id }}" method="POST">
+                                        <button class="bg-red-600 text-white px-3 py-1 rounded font-black uppercase text-[9px] btn-action">X</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="p-8 text-center text-gray-600 italic">Limpio. No hay depósitos por revisar.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h2 class="text-xs font-black text-blue-400 uppercase tracking-widest flex items-center">
+                    <span class="mr-2">🏧</span> Solicitudes de Retiro
+                </h2>
+                <div class="card-pro overflow-hidden">
+                    <table class="w-full text-[11px] text-left">
+                        <thead class="bg-gray-900/80 text-gray-500 uppercase italic">
+                            <tr>
+                                <th class="p-4">Usuario</th>
+                                <th class="p-4">Neto a Pagar</th>
+                                <th class="p-4 text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for tx in todas_tx if tx.tipo == 'RETIRO' and tx.estado == 'PENDIENTE' %}
+                            <tr class="hover:bg-gray-800/30">
+                                <td class="p-4 font-bold">{{ tx.dueno.username }}</td>
+                                <td class="p-4 font-mono font-bold text-red-400">${{ "%.2f"|format(tx.monto - tx.fee) }}</td>
+                                <td class="p-4 text-center">
+                                    <form action="/aprobar_retiro/{{ tx.id }}" method="POST">
+                                        <button class="bg-blue-600 text-white px-4 py-1 rounded font-black uppercase text-[9px] btn-action">Marcar Pagado</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="p-8 text-center text-gray-600 italic">No hay retiros pendientes para hoy.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="xl:col-span-2 space-y-4 mt-4">
+                <h2 class="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center">
+                    <span class="mr-2">🗄️</span> Control Maestro de Usuarios
+                </h2>
+                <div class="card-pro overflow-hidden">
+                    <table class="w-full text-[10px] text-left">
+                        <thead class="bg-gray-900 text-gray-500 uppercase">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Username</th>
+                                <th class="p-4">Inversión</th>
+                                <th class="p-4">ROI Disponible</th>
+                                <th class="p-4">Ref Por (ID)</th>
+                                <th class="p-4">Estado</th>
+                                <th class="p-4 text-right">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-800">
+                            {% for u in usuarios %}
+                            <tr class="hover:bg-blue-500/5">
+                                <td class="p-4 text-gray-600 font-mono">{{ u.id }}</td>
+                                <td class="p-4 font-bold text-white">{{ u.username }}</td>
+                                <td class="p-4 font-mono text-green-400 font-bold">${{ "%.2f"|format(u.balance) }}</td>
+                                <td class="p-4 font-mono text-blue-400">${{ "%.2f"|format(u.roi_total) }}</td>
+                                <td class="p-4 font-bold text-purple-500">{{ u.referred_by or 'ROOT' }}</td>
+                                <td class="p-4">
+                                    <span class="status-badge 
+                                        {% if u.deposito_status == 'ACTIVO' %}bg-green-900/30 text-green-400
+                                        {% elif u.deposito_status == 'BANEADO' %}bg-red-900 text-white
+                                        {% else %}bg-yellow-900/30 text-yellow-500{% endif %}">
+                                        {{ u.deposito_status }}
+                                    </span>
+                                </td>
+                                <td class="p-4 text-right">
+                                    {% if u.id != 1 %}
+                                    <form action="/banear_usuario/{{ u.id }}" method="POST" onsubmit="return confirm('¿Baneamos a este usuario?')">
+                                        <button class="text-red-500 hover:text-red-300 font-bold uppercase text-[9px] underline">BANEAR</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-20 py-8 border-t border-gray-800 text-center">
+            <div class="space-x-4 text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                <a href="/terminos" class="hover:text-blue-400 transition">Términos y Condiciones</a>
+                <span>|</span>
+                <a href="/privacidad" class="hover:text-blue-400 transition">Política de Privacidad</a>
+            </div>
+            <p class="text-[9px] text-gray-600 mt-2 uppercase">© 2026 Trinity Systems. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+</body>
+</html>

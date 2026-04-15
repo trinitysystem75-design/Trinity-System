@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trinity Systems | Fondeo de Capital</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0d1117; color: #f0f6fc; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #161b22; border-right: 1px solid #30363d; height: 100vh; position: fixed; width: 260px; }
+        .main-content { margin-left: 260px; padding: 40px; }
+        .card-pro { background: #161b22; border: 1px solid #30363d; border-radius: 12px; }
+        .nav-link { transition: 0.2s; border-radius: 8px; }
+        .nav-link:hover { background: #21262d; }
+        input { background-color: #000000 !important; color: #ffffff !important; }
+        input::placeholder { color: #484f58; }
+        .address-box { background: #000000; border: 1px dashed #30363d; border-radius: 8px; }
+    </style>
+</head>
+<body class="flex">
+
+    <div class="sidebar p-6 flex flex-col justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-blue-500 italic mb-10 tracking-tighter uppercase">Trinity Systems</h1>
+            <nav class="space-y-2">
+                <a href="/dashboard" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">📊 Dashboard</a>
+                <a href="/depositar" class="nav-link flex items-center p-3 text-sm font-bold text-blue-400 bg-gray-800">💰 Depositar</a>
+                <a href="/retirar" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">🏧 Retiros</a>
+            </nav>
+        </div>
+
+        <div class="card-pro p-4 bg-blue-900/10 border-blue-500/30">
+            <p class="text-[9px] font-bold text-blue-400 uppercase mb-2 tracking-widest text-center">Tu Enlace Personal</p>
+            <div class="flex gap-2">
+                <input type="text" value="{{ link_ref }}" id="sidebarRef" readonly 
+                       class="w-full bg-black text-[10px] p-2 rounded border border-gray-700 font-mono outline-none text-gray-400">
+                <button onclick="copySidebar()" 
+                        class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded transition shadow-lg shadow-blue-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content w-full">
+        <header class="mb-10 text-left">
+            <h2 class="text-2xl font-bold italic uppercase">Fondeo de Capital</h2>
+            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Activa tu bot mediante transferencia segura</p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl">
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="card-pro p-8 border-l-4 border-blue-500">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-blue-400 font-black text-xs uppercase tracking-widest">Opción: USDT (TRC20)</h3>
+                        <span class="text-[10px] bg-green-900/30 text-green-400 px-2 py-1 rounded font-bold">RED TRON</span>
+                    </div>
+                    
+                    <p class="text-gray-400 text-xs mb-4 italic">Envía solo USDT a través de la red TRC20 para asegurar la recepción de fondos.</p>
+                    
+                    <div class="address-box p-4 mb-4 flex items-center justify-between">
+                        <input type="text" value="TAtfyUoBHr42iJVsVou6nM6ghK5hZPzAmg" id="usdtWallet" readonly 
+                                class="bg-transparent border-none text-blue-400 text-sm font-mono w-full outline-none">
+                        <button onclick="copyWallet()" class="bg-gray-800 p-2 rounded hover:bg-gray-700 transition">📋</button>
+                    </div>
+
+                    <div class="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg text-center">
+                        <p class="text-yellow-500 text-[11px] font-bold uppercase tracking-wider">
+                            ⚠️ IMPORTANTE: El monto mínimo de inversión es de $30.00 USD.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="card-pro p-8 border-t-4 border-white shadow-2xl">
+                    <h3 class="text-white font-black text-xs uppercase tracking-widest mb-6 text-center">Confirmar Transferencia</h3>
+                    
+                    <form action="/subir_pago" method="POST" enctype="multipart/form-data" class="space-y-6">
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Monto Enviado (USD)</label>
+                            <input type="number" name="monto_enviado" step="0.01" min="30" required 
+                                   class="w-full border border-gray-800 rounded-lg p-3 text-sm focus:border-blue-500 outline-none font-bold font-mono"
+                                   placeholder="Ej: 100.00">
+                            <p class="text-[9px] text-blue-400 mt-2 font-bold uppercase italic">* Asegúrate de incluir el costo de comisión de tu Wallet</p>
+                        </div>
+
+                        <div class="border-2 border-dashed border-gray-800 rounded-xl p-8 text-center hover:border-blue-500 transition cursor-pointer bg-black/30 relative">
+                            <input type="file" name="comprobante" id="fileInput" required 
+                                   class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*">
+                            <div class="space-y-2">
+                                <span class="text-3xl block">📁</span>
+                                <span class="text-xs text-gray-500 block uppercase font-bold" id="fileName">Sube la captura de tu envío</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-white text-black font-black py-4 rounded-xl transition uppercase text-xs tracking-widest hover:bg-gray-200 shadow-lg">
+                            Confirmar Envío
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-blue-900/10 border border-blue-500/20 p-6 rounded-xl">
+                    <h3 class="text-blue-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center">
+                        <span class="mr-2">📜</span> Reglas de Capital
+                    </h3>
+                    <ul class="space-y-4 text-[11px]">
+                        <li class="flex justify-between border-b border-gray-800/50 pb-2">
+                            <span class="text-gray-500 font-medium">Monto Mínimo:</span>
+                            <span class="text-white font-black">$30.00 USD</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/50 pb-2">
+                            <span class="text-gray-500 font-medium">Red de Envío:</span>
+                            <span class="text-green-400 font-black italic">TRC20 Only</span>
+                        </li>
+                        <li class="pt-2">
+                            <div class="bg-blue-500/5 border border-blue-500/20 p-3 rounded-lg">
+                                <p class="text-[9px] text-blue-300 leading-relaxed italic">
+                                    El capital fondeado se activa en el bot en un lapso de 1 a 6 horas tras la verificación del staff.
+                                </p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="p-4 border border-gray-800 rounded-xl text-center">
+                    <p class="text-[9px] text-gray-500 uppercase tracking-tighter">Soporte Técnico 24/7</p>
+                    <a href="https://t.me/TuEnlace" target="_blank" class="text-[10px] text-blue-400 font-bold hover:underline mt-1 block italic">Contactar vía Telegram</a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-20 py-8 border-t border-gray-800 text-center">
+            <div class="space-x-4 text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                <a href="/terminos" class="hover:text-blue-400 transition">Términos y Condiciones</a>
+                <span>|</span>
+                <a href="/privacidad" class="hover:text-blue-400 transition">Política de Privacidad</a>
+            </div>
+            <p class="text-[9px] text-gray-600 mt-2 uppercase">© 2026 Trinity Systems. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyWallet() {
+            var copyText = document.getElementById("usdtWallet");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Billetera USDT (TRC20) copiada con éxito.");
+        }
+
+        function copySidebar() {
+            var copyText = document.getElementById("sidebarRef");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Enlace de referido copiado al portapapeles.");
+        }
+
+        document.getElementById('fileInput').onchange = function () {
+            if(this.files.length > 0) {
+                document.getElementById('fileName').innerHTML = "Archivo: " + this.files[0].name;
+                document.getElementById('fileName').classList.remove('text-gray-500');
+                document.getElementById('fileName').classList.add('text-green-400');
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Trinity Systems | Retiros</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #0d1117; color: #f0f6fc; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #161b22; border-right: 1px solid #30363d; height: 100vh; position: fixed; width: 260px; }
+        .main-content { margin-left: 260px; padding: 40px; }
+        .card-pro { background: #161b22; border: 1px solid #30363d; border-radius: 12px; }
+        .nav-link { transition: 0.2s; border-radius: 8px; }
+        .nav-link:hover { background: #21262d; }
+        
+        input { background-color: #000000 !important; color: #ffffff !important; }
+        input::placeholder { color: #484f58; }
+
+        .btn-disabled {
+            background-color: #1f2937 !important;
+            color: #455563 !important;
+            cursor: not-allowed;
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body class="flex">
+
+    <div class="sidebar p-6 flex flex-col justify-between">
+        <div>
+            <h1 class="text-2xl font-black text-blue-500 italic mb-10 tracking-tighter uppercase">Trinity Systems</h1>
+            <nav class="space-y-2">
+                <a href="/dashboard" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">📊 Dashboard</a>
+                <a href="/depositar" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">💰 Depositar</a>
+                <a href="/retirar" class="nav-link flex items-center p-3 text-sm font-bold text-blue-400 bg-gray-800">🏧 Retiros</a>
+            </nav>
+        </div>
+
+        <div class="card-pro p-4 bg-blue-900/10 border-blue-500/30">
+            <p class="text-[9px] font-bold text-blue-400 uppercase mb-2">Tu Enlace Pro</p>
+            <input type="text" value="{{ link_ref }}" id="sidebarRef" readonly class="w-full bg-black text-[10px] p-2 rounded border border-gray-700 mb-2 font-mono outline-none">
+            <button onclick="copySidebar()" class="w-full bg-blue-600 text-[10px] font-bold py-2 rounded uppercase transition hover:bg-blue-500">Copiar</button>
+        </div>
+    </div>
+
+    <div class="main-content w-full">
+        <header class="mb-10 text-left">
+            <h2 class="text-2xl font-bold italic uppercase">Solicitud de Retiro</h2>
+            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Retira tus fondos a tu wallet personal</p>
+        </header>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="mb-6 p-4 bg-blue-900/20 border border-blue-500/30 text-blue-200 text-xs rounded-xl max-w-6xl">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl">
+            <div class="lg:col-span-2">
+                <div class="card-pro p-8 border-t-4 border-green-500 shadow-2xl shadow-green-900/10">
+                    <div class="mb-8">
+                        <p class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Saldo ROI Acumulado para Retiro</p>
+                        <h3 class="text-4xl font-black text-green-400 mt-2">$ {{ "%.2f"|format(current_user.roi_total) }}</h3>
+                        
+                        {% if current_user.roi_total < 10 %}
+                        <div class="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg flex items-center gap-3">
+                            <span class="text-lg">⚠️</span>
+                            <p class="text-[10px] text-red-400 font-bold uppercase italic">
+                                Necesitas al menos $10.00 en tu ROI para habilitar retiros.
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <form action="/solicitar_retiro" method="POST" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Monto a Retirar (USD)</label>
+                                <input type="number" name="monto" step="0.01" required 
+                                       class="w-full border border-gray-800 rounded-lg p-3 text-sm focus:border-green-500 outline-none font-bold"
+                                       placeholder="Mínimo $10.00"
+                                       {% if current_user.roi_total < 10 %} disabled {% endif %}>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Red de Retiro</label>
+                                <div class="w-full bg-gray-900/50 border border-gray-800 rounded-lg p-3 text-sm text-blue-400 font-black italic">
+                                    USDT (TRC20)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Tu Dirección de Billetera (TRON NETWORK)</label>
+                            <input type="text" name="wallet_destino" required 
+                                   class="w-full border border-gray-800 rounded-lg p-3 text-xs font-mono focus:border-green-500 outline-none text-blue-400"
+                                   placeholder="T... (TRC20)"
+                                   {% if current_user.roi_total < 10 %} disabled {% endif %}>
+                            <p class="text-[9px] text-gray-600 mt-2 italic">Solo aceptamos billeteras de la red TRC20.</p>
+                        </div>
+
+                        <button type="submit" 
+                            class="w-full font-black py-4 rounded-xl transition uppercase text-xs tracking-widest shadow-lg {% if current_user.roi_total >= 10 %} bg-green-600 hover:bg-green-500 text-white shadow-green-900/20 {% else %} btn-disabled {% endif %}"
+                            {% if current_user.roi_total < 10 %} disabled {% endif %}>
+                            Procesar Retiro
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1 space-y-4">
+                <div class="bg-blue-900/10 border border-blue-500/20 p-6 rounded-xl">
+                    <h3 class="text-blue-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center">
+                        <span class="mr-2">📜</span> Reglas del Terminal
+                    </h3>
+                    <ul class="space-y-4 text-[11px]">
+                        <li class="flex justify-between border-b border-gray-800/50 pb-2">
+                            <span class="text-gray-500 font-medium">Monto Mínimo:</span>
+                            <span class="text-white font-black">$10.00 USD</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/50 pb-2">
+                            <span class="text-gray-500 font-medium">Día de Retiros:</span>
+                            <span class="text-yellow-500 font-black">SÁBADOS</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/50 pb-2">
+                            <span class="text-gray-500 font-medium">Comisión de Red:</span>
+                            <span class="text-red-400 font-black">5.0% (FEE)</span>
+                        </li>
+                        <li class="flex justify-between border-b border-gray-800/50 pb-2">
+                            <span class="text-gray-500 font-medium">Procesamiento:</span>
+                            <span class="text-white font-bold italic">24h - 48h</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="p-4 border border-gray-800 rounded-xl text-center">
+                    <p class="text-[9px] text-gray-500 uppercase tracking-tighter">Soporte Técnico 24/7</p>
+                    <a href="mailto:soporte@trinity-System75.com" class="text-[10px] text-blue-400 font-bold hover:underline mt-1 block">
+                        soporte@trinity-System75.com
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-20 py-8 border-t border-gray-800 text-center">
+            <div class="space-x-4 text-[10px] text-gray-500 uppercase font-bold tracking-widest">
+                <a href="/terminos" class="hover:text-blue-400 transition">Términos y Condiciones</a>
+                <span>|</span>
+                <a href="/privacidad" class="hover:text-blue-400 transition">Política de Privacidad</a>
+            </div>
+            <p class="text-[9px] text-gray-600 mt-2 uppercase">© 2026 Trinity Systems. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        function copySidebar() {
+            var copyText = document.getElementById("sidebarRef");
+            copyText.select();
+            document.execCommand("copy");
+            alert("Enlace de referido copiado al portapapeles.");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Estilos específicos para el contenedor legal con tu diseño */
+    .legal-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 40px;
+        background: rgba(22, 27, 34, 0.95);
+        border: 1px solid #30363d;
+        backdrop-filter: blur(15px);
+        border-radius: 1rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        color: #c9d1d9; /* Color de texto claro para fondo oscuro */
+        line-height: 1.7;
+    }
+
+    h1, h2, h3 {
+        color: #3b82f6; /* Tu azul característico */
+        text-transform: uppercase;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+    }
+
+    hr {
+        border-color: #30363d;
+        margin: 20px 0;
+    }
+
+    strong { color: #ffffff; }
+    
+    a { color: #3b82f6; text-decoration: none; transition: 0.3s; }
+    a:hover { color: #60a5fa; text-decoration: underline; }
+</style>
+
+<div class="legal-container">
+    <h1 style="text-align: center; font-size: 2rem;">Términos y Condiciones</h1>
+    <h2 style="text-align: center; font-size: 1rem; color: #8b949e;">Trinity System 75</h2>
+    <p style="text-align: center; font-size: 0.8rem; font-style: italic;">Fecha de última actualización: 12 de abril de 2026.</p>
+    <hr>
+
+    <h3>1. Aceptación de los Términos</h3>
+    <p>Al acceder y utilizar la plataforma <strong>Trinity System 75</strong> (en adelante, "la Plataforma"), usted acepta estar sujeto a los presentes Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, le solicitamos que se abstenga de utilizar nuestros servicios.</p>
+
+    <h3>2. Descripción del Servicio</h3>
+    <p>Trinity System 75 proporciona herramientas tecnológicas y análisis para la gestión de activos digitales. La Plataforma no garantiza rendimientos financieros futuros y no actúa como asesor de inversiones registrado. El uso de nuestras herramientas es responsabilidad exclusiva del usuario.</p>
+
+    <h3>3. Registro y Seguridad de la Cuenta</h3>
+    <ul style="list-style-type: square; padding-left: 20px;">
+        <li>El usuario se compromete a mantener la confidencialidad de sus credenciales de acceso.</li>
+        <li>Toda actividad realizada a través de su cuenta será responsabilidad del titular de la misma.</li>
+        <li>Trinity System 75 se reserva el derecho de suspender cuentas que infrinjan nuestras políticas de seguridad o comportamiento.</li>
+    </ul>
+
+    <h3>4. Política de Privacidad y Manejo de Datos</h3>
+    <p>La protección de su información es nuestra prioridad. Recopilamos datos mínimos estrictamente necesarios para la gestión de su cuenta. <strong>Trinity System 75</strong> no vende, alquila ni comparte sus datos personales con terceros. Los detalles completos se encuentran en nuestra Política de Privacidad anexa.</p>
+
+    <h3>5. Limitación de Responsabilidad</h3>
+    <ul style="list-style-type: square; padding-left: 20px;">
+        <li><strong>Inversiones:</strong> El trading y las inversiones en activos digitales conllevan un riesgo inherente. La Plataforma no se hace responsable por pérdidas económicas derivadas del uso de nuestras herramientas o bots.</li>
+        <li><strong>Disponibilidad:</strong> Nos esforzamos por mantener un tiempo de actividad del 99%, pero no garantizamos la disponibilidad ininterrumpida de los servicios debido a labores de mantenimiento o factores externos.</li>
+    </ul>
+
+    <h3>6. Soporte y Contacto</h3>
+    <p>Para cualquier consulta técnica, reporte de incidencias o dudas sobre el servicio, el canal oficial de atención al cliente es:</p>
+    <p><strong>Correo electrónico:</strong> <a href="mailto:soporte@trinity-system75.com">soporte@trinity-system75.com</a></p>
+    <p>Nuestro equipo de soporte responderá a su solicitud en un plazo estimado de 24 a 48 horas hábiles.</p>
+
+    <h3>7. Modificaciones</h3>
+    <p>Trinity System 75 se reserva el derecho de actualizar estos términos en cualquier momento. El uso continuado de la plataforma implica la aceptación de dichos cambios.</p>
+</div>
+{% endblock %}

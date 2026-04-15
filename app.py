@@ -46,7 +46,7 @@ class User(UserMixin, db.Model):
 class Transaccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     tipo = db.Column(db.String(20))
-    monto = db.Column(db.Float)     
+    monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
     comprobante = db.Column(db.String(200), nullable=True)
     fecha = db.Column(db.String(20), default=datetime.now().strftime('%Y-%m-%d'))
@@ -280,6 +280,9 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
+    # --- BLOQUE DE CREACIÓN AUTOMÁTICA ---
     with app.app_context():
         db.create_all()
+        print("Tablas verificadas y creadas.")
+    # -------------------------------------
     app.run(debug=True)

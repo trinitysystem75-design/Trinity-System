@@ -8,7 +8,13 @@ from sqlalchemy import func
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
+# --- MODIFICACIÓN PROFESIONAL ---
+# Ahora toma la variable DATABASE_URL de Render (Postgres)
+# Si no encuentra la variable, usa sqlite local (útil para pruebas en tu PC)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+# --------------------------------
+
 app.config['SECRET_KEY'] = 'trinity_gold_final_2026'
 app.config['UPLOAD_FOLDER'] = 'static/comprobantes'
 
@@ -21,6 +27,7 @@ app.config['MAIL_USERNAME'] = 'trinitysystem75@gmail.com'
 app.config['MAIL_PASSWORD'] = 'liqmcabffpksndfg' 
 mail = Mail(app)
 
+# Esto solo aplica si usas localmente sqlite
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 

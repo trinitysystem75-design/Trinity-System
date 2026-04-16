@@ -286,10 +286,15 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
 if __name__ == '__main__':
-    # --- BLOQUE DE CREACIÓN AUTOMÁTICA ---
     with app.app_context():
-        db.create_all()
-        print("Tablas verificadas y creadas.")
-    # -------------------------------------
-    app.run(debug=True)
+        try:
+            # Forzamos la creación de tablas
+            db.create_all()
+            print("Base de datos conectada y tablas creadas exitosamente.")
+        except Exception as e:
+            print(f"Error al conectar con la base de datos: {e}")
+    
+    # IMPORTANTE: En Render, nunca uses debug=True en producción
+    app.run()

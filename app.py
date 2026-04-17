@@ -9,27 +9,18 @@ from flask_mail import Mail, Message
 
 app = Flask(__name__)
 
-# --- MODIFICACIÓN PROFESIONAL ---
-# Ahora toma la variable DATABASE_URL de Render (Postgres)
-# Si no encuentra la variable, usa sqlite local (útil para pruebas en tu PC)
+# --- CONFIGURACIÓN ---
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
-# --------------------------------
-
 app.config['SECRET_KEY'] = 'trinity_gold_final_2026'
 app.config['UPLOAD_FOLDER'] = 'static/comprobantes'
 
-# --- CONFIGURACIÓN DE EMERGENCIA (GMAIL SMTP) ---
+# --- EMAIL SMTP ---
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
 app.config['MAIL_USERNAME'] = 'trinitysystem75@gmail.com'
 app.config['MAIL_PASSWORD'] = 'liqmcabffpksndfg' 
 mail = Mail(app)
-
-# Esto solo aplica si usas localmente sqlite
-if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -60,13 +51,19 @@ class Transaccion(db.Model):
     estado = db.Column(db.String(20), default='PENDIENTE')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
+# --- GARANTÍA DE TABLAS ---
+with app.app_context():
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    db.create_all()
+
 @login_manager.user_loader
 def load_user(user_id):
     user = User.query.get(int(user_id))
     if user and user.deposito_status == 'BANEADO': return None
     return user
 
-# --- RUTAS ---
+# --- TODAS TUS RUTAS ORIGINALES ---
 @app.route('/')
 def home(): return redirect(url_for('login'))
 
@@ -80,29 +77,19 @@ def registro():
 
 @app.route('/crear_usuario', methods=['POST'])
 def crear_usuario():
-    u = request.form.get('username')
-    e = request.form.get('email')
-    p = request.form.get('password')
+    u, e, p = request.form.get('username'), request.form.get('email'), request.form.get('password')
     ref = request.args.get('ref')
     clean_ref = int(ref) if ref and ref.isdigit() else None
-    
-    # --- VALIDACIÓN DE CORREO DUPLICADO ---
     if User.query.filter_by(email=e).first():
-        flash("Este correo ya está en uso. Por favor usa otro.")
+        flash("Este correo ya está en uso.")
         return redirect(url_for('registro'))
-    # ---------------------------------------
-
     codigo = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-    
     try:
         msg = Message("Código de Verificación", sender="trinitysystem75@gmail.com", recipients=[e])
         msg.body = f"Tu código es: {codigo}"
         mail.send(msg)
-        print("DEBUG: Correo enviado correctamente")
     except Exception as err:
-        print(f"DEBUG ERROR CRÍTICO: {err}")
-        flash(f"Error técnico: {err}")
-    
+        print(f"DEBUG ERROR: {err}")
     nuevo = User(username=u, email=e, password=p, referred_by=clean_ref, codigo_verificacion=codigo, esta_verificado=False)
     db.session.add(nuevo)
     db.session.commit()
@@ -113,13 +100,11 @@ def verificar_cuenta(username): return render_template('verificar.html', usernam
 
 @app.route('/validar_codigo', methods=['POST'])
 def validar_codigo():
-    u = request.form.get('username')
-    codigo_ingresado = request.form.get('codigo')
+    u, codigo_ingresado = request.form.get('username'), request.form.get('codigo')
     user = User.query.filter_by(username=u).first()
     if user and user.codigo_verificacion == codigo_ingresado:
         user.esta_verificado = True
         db.session.commit()
-        flash("Verificado. Ya puedes entrar.")
         return redirect(url_for('login'))
     flash("Código incorrecto.")
     return redirect(url_for('verificar_cuenta', username=u))
@@ -237,14 +222,12 @@ def aprobar_retiro(tx_id):
 def banear_usuario(u_id):
     if current_user.username != 'Cristhian2704': return redirect(url_for('dashboard'))
     u = User.query.get(u_id)
-    # BLINDAJE DE CUENTA MAESTRA
     if u and u.username == 'Cristhian2704':
         flash("No puedes banear la cuenta maestra.")
         return redirect(url_for('admin_panel'))
     if u:
         u.deposito_status = 'BANEADO'
         db.session.commit()
-        flash(f"Usuario {u.username} baneado.")
     return redirect(url_for('admin_panel'))
 
 @app.route('/ajuste_manual', methods=['POST'])
@@ -255,7 +238,6 @@ def ajuste_manual():
     if u:
         u.balance = float(request.form.get('nuevo_balance'))
         db.session.commit()
-        flash("Balance actualizado.")
     return redirect(url_for('admin_panel'))
 
 @app.route('/solicitar_retiro', methods=['POST'])
@@ -286,15 +268,5 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
 if __name__ == '__main__':
-    with app.app_context():
-        try:
-            # Forzamos la creación de tablas
-            db.create_all()
-            print("Base de datos conectada y tablas creadas exitosamente.")
-        except Exception as e:
-            print(f"Error al conectar con la base de datos: {e}")
-    
-    # IMPORTANTE: En Render, nunca uses debug=True en producción
     app.run()

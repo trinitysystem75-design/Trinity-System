@@ -13,6 +13,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['SECRET_KEY'] = 'trinity_gold_final_2026'
 app.config['UPLOAD_FOLDER'] = 'static/comprobantes'
+DOMINIO_OFICIAL = "https://www.trinity-system75.com"
 
 # --- EMAIL SMTP ---
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -63,7 +64,7 @@ def load_user(user_id):
     if user and user.deposito_status == 'BANEADO': return None
     return user
 
-# --- TODAS TUS RUTAS ORIGINALES ---
+# --- RUTAS ---
 @app.route('/')
 def home(): return redirect(url_for('login'))
 
@@ -77,12 +78,20 @@ def registro():
 
 @app.route('/crear_usuario', methods=['POST'])
 def crear_usuario():
-    u, e, p = request.form.get('username'), request.form.get('email'), request.form.get('password')
+    u = request.form.get('username')
+    e = request.form.get('email')
+    p = request.form.get('password')
     ref = request.args.get('ref')
     clean_ref = int(ref) if ref and ref.isdigit() else None
-    if User.query.filter_by(email=e).first():
-        flash("Este correo ya está en uso.")
+    
+    # Validación de duplicados
+    if User.query.filter_by(username=u).first():
+        flash("¡Error! Ese nombre de usuario ya está registrado.")
         return redirect(url_for('registro'))
+    if User.query.filter_by(email=e).first():
+        flash("¡Error! Este correo electrónico ya tiene cuenta.")
+        return redirect(url_for('registro'))
+
     codigo = ''.join([str(random.randint(0, 9)) for _ in range(6)])
     try:
         msg = Message("Código de Verificación", sender="trinitysystem75@gmail.com", recipients=[e])
@@ -90,6 +99,7 @@ def crear_usuario():
         mail.send(msg)
     except Exception as err:
         print(f"DEBUG ERROR: {err}")
+    
     nuevo = User(username=u, email=e, password=p, referred_by=clean_ref, codigo_verificacion=codigo, esta_verificado=False)
     db.session.add(nuevo)
     db.session.commit()
@@ -131,27 +141,27 @@ def dashboard():
     conteo_red = User.query.filter_by(referred_by=current_user.id).count()
     ganancia_hoy = current_user.balance * 0.012 
     roi_porcentaje = (current_user.roi_total / current_user.balance * 100) if current_user.balance > 0 else 0
-    link_ref = f"http://127.0.0.1:5000/registro?ref={current_user.id}"
+    link_ref = f"{DOMINIO_OFICIAL}/registro?ref={current_user.id}"
     historial = Transaccion.query.filter_by(user_id=current_user.id).order_by(Transaccion.id.desc()).limit(5).all()
     return render_template('dashboard.html', link_ref=link_ref, conteo_red=conteo_red, ganancia_hoy=ganancia_hoy, roi_porcentaje=roi_porcentaje, historial=historial)
 
 @app.route('/mi_red')
 @login_required
 def mi_red():
-    link_ref = f"http://127.0.0.1:5000/registro?ref={current_user.id}"
+    link_ref = f"{DOMINIO_OFICIAL}/registro?ref={current_user.id}"
     referidos = User.query.filter_by(referred_by=current_user.id).all()
     return render_template('red.html', link_ref=link_ref, referidos=referidos)
 
 @app.route('/depositar')
 @login_required
 def depositar():
-    link_ref = f"http://127.0.0.1:5000/registro?ref={current_user.id}"
+    link_ref = f"{DOMINIO_OFICIAL}/registro?ref={current_user.id}"
     return render_template('depositar.html', link_ref=link_ref)
 
 @app.route('/retirar')
 @login_required
 def retirar():
-    link_ref = f"http://127.0.0.1:5000/registro?ref={current_user.id}"
+    link_ref = f"{DOMINIO_OFICIAL}/registro?ref={current_user.id}"
     return render_template('retirar.html', link_ref=link_ref)
 
 @app.route('/subir_pago', methods=['POST'])

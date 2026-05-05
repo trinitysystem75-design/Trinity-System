@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Trinity Systems | Fondeo de Capital</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { background-color: #0d1117; color: #f0f6fc; font-family: 'Inter', sans-serif; }
         .sidebar { background: #161b22; border-right: 1px solid #30363d; height: 100vh; position: fixed; width: 260px; }
@@ -14,10 +15,18 @@
         input { background-color: #000000 !important; color: #ffffff !important; }
         input::placeholder { color: #484f58; }
         .address-box { background: #000000; border: 1px dashed #30363d; border-radius: 8px; }
+        
+        /* Estilo para la Caja VIP */
+        .vip-box {
+            background: linear-gradient(145deg, #1c2128, #161b22);
+            border: 1px solid rgba(0, 136, 204, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
     </style>
 </head>
 <body class="flex">
 
+    <!-- SIDEBAR -->
     <div class="sidebar p-6 flex flex-col justify-between">
         <div>
             <h1 class="text-2xl font-black text-blue-500 italic mb-10 tracking-tighter uppercase">Trinity Systems</h1>
@@ -43,6 +52,7 @@
         </div>
     </div>
 
+    <!-- CONTENIDO PRINCIPAL -->
     <div class="main-content w-full">
         <header class="mb-10 text-left">
             <h2 class="text-2xl font-bold italic uppercase">Fondeo de Capital</h2>
@@ -50,6 +60,7 @@
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl">
+            <!-- COLUMNA IZQUIERDA: FORMULARIO -->
             <div class="lg:col-span-2 space-y-6">
                 
                 <div class="card-pro p-8 border-l-4 border-blue-500">
@@ -101,6 +112,7 @@
                 </div>
             </div>
 
+            <!-- COLUMNA DERECHA: REGLAS Y COMUNIDAD -->
             <div class="lg:col-span-1 space-y-4">
                 <div class="bg-blue-900/10 border border-blue-500/20 p-6 rounded-xl">
                     <h3 class="text-blue-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center">
@@ -125,9 +137,19 @@
                     </ul>
                 </div>
 
-                <div class="p-4 border border-gray-800 rounded-xl text-center">
-                    <p class="text-[9px] text-gray-500 uppercase tracking-tighter">Soporte Técnico 24/7</p>
-                    <a href="https://t.me/TuEnlace" target="_blank" class="text-[10px] text-blue-400 font-bold hover:underline mt-1 block italic">Contactar vía Telegram</a>
+                <!-- SECCIÓN COMUNIDAD VIP (ACTUALIZADA) -->
+                <div class="vip-box p-6 rounded-xl text-center border-blue-500/30 shadow-xl">
+                    <p class="text-[9px] text-blue-400 font-black uppercase tracking-[0.3em] mb-3">Acceso Exclusivo</p>
+                    <h3 class="text-white font-bold text-sm mb-4">Trinity Elite: Comunidad VIP 💎</h3>
+                    
+                    <a href="https://t.me/+uFqP_bgoShU4NmUx" target="_blank" 
+                       class="inline-block w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-blue-500/20 text-[11px] uppercase tracking-wider">
+                        <i class="fab fa-telegram-plane mr-2"></i> Unirme al Grupo
+                    </a>
+                    
+                    <p class="text-[9px] text-gray-500 mt-4 leading-relaxed italic">
+                        Mira los resultados de la comunidad y el respaldo del staff en tiempo real.
+                    </p>
                 </div>
             </div>
         </div>

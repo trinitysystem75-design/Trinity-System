@@ -6,6 +6,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from datetime import datetime
 from sqlalchemy import func
 from flask_mail import Mail, Message
+from apscheduler.schedulers.background import BackgroundScheduler # Para el ROI automático
 
 app = Flask(__name__)
 
@@ -48,9 +49,34 @@ class Transaccion(db.Model):
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
     comprobante = db.Column(db.String(200), nullable=True)
-    fecha = db.Column(db.String(20), default=datetime.now().strftime('%Y-%m-%d'))
+    # CORRECCIÓN DE FECHA: datetime.now sin paréntesis para que se ejecute al crear la TX
+    fecha = db.Column(db.DateTime, default=datetime.now) 
     estado = db.Column(db.String(20), default='PENDIENTE')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+# --- LÓGICA DE ROI DIARIO (1.2%) ---
+def repartir_roi_diario():
+    with app.app_context():
+        # Solo sumamos a los que tienen inversión activa
+        usuarios = User.query.filter(User.balance > 0, User.deposito_status == 'ACTIVO').all()
+        for u in usuarios:
+            ganancia = u.balance * 0.012
+            u.roi_total += ganancia # Aquí se guarda el dinero real en la base de datos
+            # Registro en historial para que el usuario lo vea
+            db.session.add(Transaccion(
+                tipo='ROI_DIARIO', 
+                monto=ganancia, 
+                estado='APROBADO', 
+                user_id=u.id
+            ))
+        db.session.commit()
+        print(f"ROI repartido con éxito: {datetime.now()}")
+
+# --- CONFIGURACIÓN DEL SCHEDULER (RELOJ) ---
+scheduler = BackgroundScheduler()
+# Ejecuta la función todos los días a las 00:00 (Medianoche)
+scheduler.add_job(func=repartir_roi_diario, trigger="cron", hour=0, minute=0)
+scheduler.start()
 
 # --- GARANTÍA DE TABLAS ---
 with app.app_context():
@@ -84,7 +110,6 @@ def crear_usuario():
     ref = request.args.get('ref')
     clean_ref = int(ref) if ref and ref.isdigit() else None
     
-    # Validación de duplicados
     if User.query.filter_by(username=u).first():
         flash("¡Error! Ese nombre de usuario ya está registrado.")
         return redirect(url_for('registro'))
@@ -145,6 +170,15 @@ def dashboard():
     historial = Transaccion.query.filter_by(user_id=current_user.id).order_by(Transaccion.id.desc()).limit(5).all()
     return render_template('dashboard.html', link_ref=link_ref, conteo_red=conteo_red, ganancia_hoy=ganancia_hoy, roi_porcentaje=roi_porcentaje, historial=historial)
 
+# RUTA SECRETA PARA PROBAR EL ROI AHORA MISMO
+@app.route('/test-roi-now')
+@login_required
+def test_roi():
+    if current_user.username == 'Cristhian2704':
+        repartir_roi_diario()
+        return "ROI Procesado manualmente. Revisa tu saldo."
+    return "No autorizado."
+
 @app.route('/mi_red')
 @login_required
 def mi_red():
@@ -179,7 +213,8 @@ def subir_pago():
                 fn = f"dep_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
                 current_user.deposito_status = 'PENDIENTE'
-                db.session.add(Transaccion(tipo='DEPÓSITO', monto=monto, comprobante=fn, user_id=current_user.id))
+                # Al crear el depósito, tomará la fecha y hora REAL de este momento
+                db.session.add(Transaccion(tipo='DEPÓSITO', monto=monto, comprobante=fn, user_id=current_user.id, fecha=datetime.now()))
                 db.session.commit()
                 flash("Pago enviado.")
     except: flash("Error en el monto.")
@@ -206,14 +241,19 @@ def aprobar_pago(tx_id):
         u.balance += tx.monto
         u.deposito_status = 'ACTIVO'
         tx.estado = 'APROBADO'
+        # Actualizamos la fecha de la transacción al momento de la aprobación
+        tx.fecha = datetime.now() 
+        
+        # BONO DE RED (10%)
         if u.referred_by:
             patro = User.query.get(u.referred_by)
             if patro:
                 bono = tx.monto * 0.10
-                patro.roi_total += bono
-                db.session.add(Transaccion(tipo='BONO_RED', monto=bono, estado='APROBADO', user_id=patro.id))
+                patro.roi_total += bono # Sumamos directo al ROI retirable del patrocinador
+                db.session.add(Transaccion(tipo='BONO_RED', monto=bono, estado='APROBADO', user_id=patro.id, fecha=datetime.now()))
+        
         db.session.commit()
-        flash("Depósito aprobado.")
+        flash("Depósito aprobado y bonos generados.")
     return redirect(url_for('admin_panel'))
 
 @app.route('/aprobar_retiro/<int:tx_id>', methods=['POST'])
@@ -223,6 +263,7 @@ def aprobar_retiro(tx_id):
     tx = Transaccion.query.get(tx_id)
     if tx:
         tx.estado = 'COMPLETADO'
+        tx.fecha = datetime.now()
         db.session.commit()
         flash("Retiro completado.")
     return redirect(url_for('admin_panel'))
@@ -253,13 +294,14 @@ def ajuste_manual():
 @app.route('/solicitar_retiro', methods=['POST'])
 @login_required
 def solicitar_retiro():
+    # Sábados es día 5 en Python (0=Lunes, 6=Domingo)
     if datetime.now().weekday() != 5:
         flash("Retiros solo Sábados.")
         return redirect(url_for('retirar'))
     try:
         monto = float(request.form.get('monto', 0))
         if monto >= 10 and monto <= current_user.roi_total:
-            db.session.add(Transaccion(tipo='RETIRO', monto=monto, fee=monto*0.05, estado='PENDIENTE', user_id=current_user.id))
+            db.session.add(Transaccion(tipo='RETIRO', monto=monto, fee=monto*0.05, estado='PENDIENTE', user_id=current_user.id, fecha=datetime.now()))
             current_user.roi_total -= monto
             db.session.commit()
             flash("Solicitud enviada.")

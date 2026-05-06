@@ -1,4 +1,4 @@
-import os
+基础import os
 import random
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -49,7 +49,6 @@ class Transaccion(db.Model):
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
     comprobante = db.Column(db.String(200), nullable=True)
-    # CORRECCIÓN DE FECHA: datetime.now sin paréntesis para que se ejecute al crear la TX
     fecha = db.Column(db.DateTime, default=datetime.now) 
     estado = db.Column(db.String(20), default='PENDIENTE')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -67,7 +66,8 @@ def repartir_roi_diario():
                 tipo='ROI_DIARIO', 
                 monto=ganancia, 
                 estado='APROBADO', 
-                user_id=u.id
+                user_id=u.id,
+                fecha=datetime.now()
             ))
         db.session.commit()
         print(f"ROI repartido con éxito: {datetime.now()}")
@@ -90,7 +90,7 @@ def load_user(user_id):
     if user and user.deposito_status == 'BANEADO': return None
     return user
 
-# --- RUTAS ---
+# --- RUTAS DE USUARIO ---
 @app.route('/')
 def home(): return redirect(url_for('login'))
 
@@ -170,15 +170,6 @@ def dashboard():
     historial = Transaccion.query.filter_by(user_id=current_user.id).order_by(Transaccion.id.desc()).limit(5).all()
     return render_template('dashboard.html', link_ref=link_ref, conteo_red=conteo_red, ganancia_hoy=ganancia_hoy, roi_porcentaje=roi_porcentaje, historial=historial)
 
-# RUTA SECRETA PARA PROBAR EL ROI AHORA MISMO
-@app.route('/test-roi-now')
-@login_required
-def test_roi():
-    if current_user.username == 'Cristhian2704':
-        repartir_roi_diario()
-        return "ROI Procesado manualmente. Revisa tu saldo."
-    return "No autorizado."
-
 @app.route('/mi_red')
 @login_required
 def mi_red():
@@ -213,12 +204,13 @@ def subir_pago():
                 fn = f"dep_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{ext}"
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], fn))
                 current_user.deposito_status = 'PENDIENTE'
-                # Al crear el depósito, tomará la fecha y hora REAL de este momento
                 db.session.add(Transaccion(tipo='DEPÓSITO', monto=monto, comprobante=fn, user_id=current_user.id, fecha=datetime.now()))
                 db.session.commit()
                 flash("Pago enviado.")
     except: flash("Error en el monto.")
     return redirect(url_for('dashboard'))
+
+# --- RUTAS DE ADMINISTRADOR (TRINITY ROOT CENTER) ---
 
 @app.route('/system-root-portal')
 @login_required
@@ -231,6 +223,34 @@ def admin_panel():
     roi_pagar = db.session.query(func.sum(User.roi_total)).scalar() or 0.0
     return render_template('admin_trinity.html', usuarios=usuarios, pagos=pagos, retiros=retiros, capital_total=cap_total, roi_por_pagar=roi_pagar)
 
+@app.route('/admin/pagar-roi', methods=['POST'])
+@login_required
+def pagar_roi_manual():
+    if current_user.username != 'Cristhian2704': return "No autorizado."
+    
+    # Filtramos usuarios con estado ACTIVO y balance mayor a 0
+    usuarios = User.query.filter_by(deposito_status='ACTIVO').filter(User.balance > 0).all()
+    
+    contador = 0
+    porcentaje = 0.012  # 1.2%
+
+    for u in usuarios:
+        ganancia = u.balance * porcentaje
+        u.roi_total += ganancia
+        # Registro en historial
+        db.session.add(Transaccion(
+            tipo='ROI_DIARIO', 
+            monto=ganancia, 
+            estado='APROBADO', 
+            user_id=u.id,
+            fecha=datetime.now()
+        ))
+        contador += 1
+
+    db.session.commit()
+    flash(f"¡Éxito! Se ha distribuido el 1.2% de ROI a {contador} usuarios activos.")
+    return redirect(url_for('admin_panel'))
+
 @app.route('/aprobar_pago/<int:tx_id>', methods=['POST'])
 @login_required
 def aprobar_pago(tx_id):
@@ -241,7 +261,6 @@ def aprobar_pago(tx_id):
         u.balance += tx.monto
         u.deposito_status = 'ACTIVO'
         tx.estado = 'APROBADO'
-        # Actualizamos la fecha de la transacción al momento de la aprobación
         tx.fecha = datetime.now() 
         
         # BONO DE RED (10%)
@@ -249,7 +268,7 @@ def aprobar_pago(tx_id):
             patro = User.query.get(u.referred_by)
             if patro:
                 bono = tx.monto * 0.10
-                patro.roi_total += bono # Sumamos directo al ROI retirable del patrocinador
+                patro.roi_total += bono 
                 db.session.add(Transaccion(tipo='BONO_RED', monto=bono, estado='APROBADO', user_id=patro.id, fecha=datetime.now()))
         
         db.session.commit()
@@ -291,21 +310,52 @@ def ajuste_manual():
         db.session.commit()
     return redirect(url_for('admin_panel'))
 
+# --- RUTA DE RETIRO ACTUALIZADA ---
 @app.route('/solicitar_retiro', methods=['POST'])
 @login_required
 def solicitar_retiro():
-    # Sábados es día 5 en Python (0=Lunes, 6=Domingo)
+    # Validación de día (Sábados)
     if datetime.now().weekday() != 5:
-        flash("Retiros solo Sábados.")
+        flash("Retiros solo disponibles los días Sábados.")
         return redirect(url_for('retirar'))
+        
     try:
         monto = float(request.form.get('monto', 0))
-        if monto >= 10 and monto <= current_user.roi_total:
-            db.session.add(Transaccion(tipo='RETIRO', monto=monto, fee=monto*0.05, estado='PENDIENTE', user_id=current_user.id, fecha=datetime.now()))
-            current_user.roi_total -= monto
-            db.session.commit()
-            flash("Solicitud enviada.")
-    except: flash("Error.")
+        
+        # 1. Validación de monto mínimo ($5)
+        if monto < 5:
+            flash("El monto mínimo de retiro es de $5.00 USD.")
+            return redirect(url_for('retirar'))
+            
+        # 2. Validación de saldo disponible
+        if monto > current_user.roi_total:
+            flash("Saldo insuficiente en tu cuenta ROI.")
+            return redirect(url_for('retirar'))
+
+        # 3. Procesar la transacción
+        fee_monto = monto * 0.05  # Comisión del 5%
+        
+        nueva_tx = Transaccion(
+            tipo='RETIRO', 
+            monto=monto, 
+            fee=fee_monto, 
+            estado='PENDIENTE', 
+            user_id=current_user.id, 
+            fecha=datetime.now()
+        )
+        
+        # 4. Restar saldo inmediatamente
+        current_user.roi_total -= monto
+        
+        db.session.add(nueva_tx)
+        db.session.commit()
+        
+        flash("Solicitud de retiro enviada con éxito. El saldo ha sido descontado.")
+    except Exception as e:
+        db.session.rollback()
+        flash("Ocurrió un error al procesar el retiro.")
+        print(f"ERROR RETIRO: {e}")
+        
     return redirect(url_for('dashboard'))
 
 @app.route('/terminos')

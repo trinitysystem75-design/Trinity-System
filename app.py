@@ -45,54 +45,52 @@ class User(UserMixin, db.Model):
 
 class Transaccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(100)) 
+    tipo = db.Column(db.Text) # TEXT para evitar límites de caracteres
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
-    comprobante = db.Column(db.String(200), nullable=True)
+    comprobante = db.Column(db.Text, nullable=True) # TEXT para evitar límites de caracteres
     fecha = db.Column(db.DateTime, default=datetime.now) 
-    estado = db.Column(db.String(100), default='PENDIENTE') 
+    estado = db.Column(db.Text, default='PENDIENTE') # TEXT para evitar límites de caracteres
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- LÓGICA DE ROI DIARIO (AUTOMÁTICO) ---
+# --- LÓGICA DE ROI DIARIO ---
 def repartir_roi_diario():
     with app.app_context():
         usuarios = User.query.filter(User.balance > 0, User.deposito_status == 'ACTIVO').all()
         for u in usuarios:
             ganancia = round(u.balance * 0.012, 2)
             u.roi_total += ganancia
-            # USAMOS TÉRMINOS CORTOS AQUÍ TAMBIÉN POR SEGURIDAD
+            # Forzamos comprobante como string vacío para evitar errores de None
             db.session.add(Transaccion(
                 tipo='ROI', 
                 monto=ganancia, 
                 estado='OK', 
+                comprobante='', 
                 user_id=u.id,
                 fecha=datetime.now()
             ))
         db.session.commit()
         print(f"ROI automático repartido: {datetime.now()}")
 
-# --- CONFIGURACIÓN DEL SCHEDULER ---
+# --- SCHEDULER ---
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=repartir_roi_diario, trigger="cron", hour=0, minute=0)
 scheduler.start()
 
-# --- BOMBA DE LIMPIEZA Y ACTUALIZACIÓN DE EMERGENCIA ---
+# Forzamos la creación de carpetas y actualización de BD al inicio
 with app.app_context():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-    
     db.create_all()
-    
+    # Esta línea intenta forzar el cambio en PostgreSQL si detecta que las columnas son limitadas
     if "postgresql" in app.config.get('SQLALCHEMY_DATABASE_URI', ''):
         try:
-            db.session.execute(db.text("COMMIT;")) 
-            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN tipo TYPE VARCHAR(100);"))
-            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN estado TYPE VARCHAR(100);"))
+            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN tipo TYPE TEXT;"))
+            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN estado TYPE TEXT;"))
+            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN comprobante TYPE TEXT;"))
             db.session.commit()
-            print(">>> [SISTEMA] ¡BASE DE DATOS AMPLIADA EXITOSAMENTE! <<<")
-        except Exception as e:
+        except:
             db.session.rollback()
-            print(f">>> [SISTEMA] Aviso de BD: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -100,7 +98,7 @@ def load_user(user_id):
     if user and user.deposito_status == 'BANEADO': return None
     return user
 
-# --- RUTAS DE USUARIO ---
+# --- RUTAS ---
 @app.route('/')
 def home(): return redirect(url_for('login'))
 
@@ -114,17 +112,12 @@ def registro():
 
 @app.route('/crear_usuario', methods=['POST'])
 def crear_usuario():
-    u = request.form.get('username')
-    e = request.form.get('email')
-    p = request.form.get('password')
+    u, e, p = request.form.get('username'), request.form.get('email'), request.form.get('password')
     ref = request.args.get('ref')
     clean_ref = int(ref) if ref and ref.isdigit() else None
     
-    if User.query.filter_by(username=u).first():
-        flash("¡Error! Ese nombre de usuario ya está registrado.")
-        return redirect(url_for('registro'))
-    if User.query.filter_by(email=e).first():
-        flash("¡Error! Este correo electrónico ya tiene cuenta.")
+    if User.query.filter_by(username=u).first() or User.query.filter_by(email=e).first():
+        flash("Usuario o correo ya registrado.")
         return redirect(url_for('registro'))
 
     codigo = ''.join([str(random.randint(0, 9)) for _ in range(6)])
@@ -132,8 +125,7 @@ def crear_usuario():
         msg = Message("Código de Verificación", sender="trinitysystem75@gmail.com", recipients=[e])
         msg.body = f"Tu código es: {codigo}"
         mail.send(msg)
-    except Exception as err:
-        print(f"DEBUG ERROR MAIL: {err}")
+    except: pass
     
     nuevo = User(username=u, email=e, password=p, referred_by=clean_ref, codigo_verificacion=codigo, esta_verificado=False)
     db.session.add(nuevo)
@@ -158,16 +150,10 @@ def validar_codigo():
 def entrar():
     u, p = request.form.get('username'), request.form.get('password')
     user = User.query.filter_by(username=u, password=p).first()
-    if user:
-        if user.deposito_status == 'BANEADO':
-            flash("Cuenta suspendida.")
-            return redirect(url_for('login'))
-        if not user.esta_verificado:
-            flash("Verifica tu cuenta primero.")
-            return redirect(url_for('verificar_cuenta', username=u))
+    if user and user.esta_verificado and user.deposito_status != 'BANEADO':
         login_user(user)
         return redirect(url_for('dashboard'))
-    flash("Error: Credenciales incorrectas.")
+    flash("Error de acceso.")
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
@@ -204,10 +190,7 @@ def retirar():
 def subir_pago():
     try:
         monto = float(request.form.get('monto_enviado', 0))
-        if monto < 30:
-            flash("Mínimo $30 USD.")
-            return redirect(url_for('depositar'))
-        if 'comprobante' in request.files:
+        if monto >= 30 and 'comprobante' in request.files:
             file = request.files['comprobante']
             if file and file.filename != '':
                 ext = file.filename.split('.')[-1]
@@ -217,10 +200,10 @@ def subir_pago():
                 db.session.add(Transaccion(tipo='DEPÓSITO', monto=monto, comprobante=fn, user_id=current_user.id, fecha=datetime.now()))
                 db.session.commit()
                 flash("Pago enviado.")
-    except: flash("Error en el monto.")
+    except: flash("Error.")
     return redirect(url_for('dashboard'))
 
-# --- RUTAS DE ADMINISTRADOR ---
+# --- PANEL ADMIN ---
 
 @app.route('/system-root-portal')
 @login_required
@@ -243,18 +226,19 @@ def pagar_roi_manual():
         for u in usuarios:
             ganancia = round(u.balance * 0.012, 2)
             u.roi_total += ganancia
-            # CAMBIO CLAVE: USAMOS 'ROI' Y 'OK' PARA QUE QUEPAN SÍ O SÍ
+            # Comprobante vacío para evitar error de base de datos
             nueva_tx = Transaccion(
                 tipo='ROI', 
                 monto=ganancia, 
                 estado='OK', 
+                comprobante='', 
                 user_id=u.id,
                 fecha=datetime.now()
             )
             db.session.add(nueva_tx)
             contador += 1
         db.session.commit()
-        flash(f"¡Éxito! Se ha distribuido el ROI a {contador} usuarios.")
+        flash(f"Éxito: {contador} ROIs pagados.")
     except Exception as e:
         db.session.rollback()
         flash(f"Error: {str(e)}")
@@ -270,15 +254,13 @@ def aprobar_pago(tx_id):
         u.balance += tx.monto
         u.deposito_status = 'ACTIVO'
         tx.estado = 'APROBADO'
-        tx.fecha = datetime.now() 
         if u.referred_by:
             patro = User.query.get(u.referred_by)
             if patro:
                 bono = round(tx.monto * 0.10, 2)
                 patro.roi_total += bono 
-                db.session.add(Transaccion(tipo='BONO_RED', monto=bono, estado='APROBADO', user_id=patro.id, fecha=datetime.now()))
+                db.session.add(Transaccion(tipo='BONO_RED', monto=bono, estado='OK', comprobante='', user_id=patro.id, fecha=datetime.now()))
         db.session.commit()
-        flash("Depósito aprobado.")
     return redirect(url_for('admin_panel'))
 
 @app.route('/aprobar_retiro/<int:tx_id>', methods=['POST'])
@@ -288,9 +270,7 @@ def aprobar_retiro(tx_id):
     tx = Transaccion.query.get(tx_id)
     if tx:
         tx.estado = 'COMPLETADO'
-        tx.fecha = datetime.now()
         db.session.commit()
-        flash("Retiro completado.")
     return redirect(url_for('admin_panel'))
 
 @app.route('/banear_usuario/<int:u_id>', methods=['POST'])
@@ -317,25 +297,18 @@ def ajuste_manual():
 @login_required
 def solicitar_retiro():
     if datetime.now().weekday() != 5:
-        flash("Retiros solo disponibles los días Sábados.")
+        flash("Solo Sábados.")
         return redirect(url_for('retirar'))
     try:
         monto = float(request.form.get('monto', 0))
-        if monto < 5:
-            flash("Mínimo $5.00 USD.")
-            return redirect(url_for('retirar'))
-        if monto > current_user.roi_total:
-            flash("Saldo insuficiente.")
-            return redirect(url_for('retirar'))
-        fee_monto = round(monto * 0.05, 2)
-        nueva_tx = Transaccion(tipo='RETIRO', monto=monto, fee=fee_monto, estado='PENDIENTE', user_id=current_user.id, fecha=datetime.now())
-        current_user.roi_total -= monto
-        db.session.add(nueva_tx)
-        db.session.commit()
-        flash("Solicitud enviada.")
-    except Exception as e:
-        db.session.rollback()
-        flash("Error procesando retiro.")
+        if monto >= 5 and monto <= current_user.roi_total:
+            fee_monto = round(monto * 0.05, 2)
+            nueva_tx = Transaccion(tipo='RETIRO', monto=monto, fee=fee_monto, estado='PENDIENTE', comprobante='', user_id=current_user.id, fecha=datetime.now())
+            current_user.roi_total -= monto
+            db.session.add(nueva_tx)
+            db.session.commit()
+            flash("Enviado.")
+    except: flash("Error.")
     return redirect(url_for('dashboard'))
 
 @app.route('/terminos')

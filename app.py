@@ -6,7 +6,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from datetime import datetime
 from sqlalchemy import func
 from flask_mail import Mail, Message
-from apscheduler.schedulers.background import BackgroundScheduler # Para el ROI automático
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 
@@ -45,23 +45,21 @@ class User(UserMixin, db.Model):
 
 class Transaccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(50))
+    tipo = db.Column(db.String(100)) # Aumentado internamente
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
     comprobante = db.Column(db.String(200), nullable=True)
     fecha = db.Column(db.DateTime, default=datetime.now) 
-    estado = db.Column(db.String(50), default='PENDIENTE')
+    estado = db.Column(db.String(100), default='PENDIENTE') # Aumentado internamente
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- LÓGICA DE ROI DIARIO (1.2%) ---
+# --- LÓGICA DE ROI DIARIO (AUTOMÁTICO) ---
 def repartir_roi_diario():
     with app.app_context():
-        # Solo sumamos a los que tienen inversión activa
         usuarios = User.query.filter(User.balance > 0, User.deposito_status == 'ACTIVO').all()
         for u in usuarios:
-            ganancia = u.balance * 0.012
-            u.roi_total += ganancia # Aquí se guarda el dinero real en la base de datos
-            # Registro en historial para que el usuario lo vea
+            ganancia = round(u.balance * 0.012, 2)
+            u.roi_total += ganancia
             db.session.add(Transaccion(
                 tipo='ROI_DIARIO', 
                 monto=ganancia, 
@@ -70,11 +68,10 @@ def repartir_roi_diario():
                 fecha=datetime.now()
             ))
         db.session.commit()
-        print(f"ROI repartido con éxito: {datetime.now()}")
+        print(f"ROI automático repartido: {datetime.now()}")
 
-# --- CONFIGURACIÓN DEL SCHEDULER (RELOJ) ---
+# --- CONFIGURACIÓN DEL SCHEDULER ---
 scheduler = BackgroundScheduler()
-# Ejecuta la función todos los días a las 00:00 (Medianoche)
 scheduler.add_job(func=repartir_roi_diario, trigger="cron", hour=0, minute=0)
 scheduler.start()
 
@@ -123,7 +120,7 @@ def crear_usuario():
         msg.body = f"Tu código es: {codigo}"
         mail.send(msg)
     except Exception as err:
-        print(f"DEBUG ERROR: {err}")
+        print(f"DEBUG ERROR MAIL: {err}")
     
     nuevo = User(username=u, email=e, password=p, referred_by=clean_ref, codigo_verificacion=codigo, esta_verificado=False)
     db.session.add(nuevo)
@@ -227,28 +224,26 @@ def admin_panel():
 @login_required
 def pagar_roi_manual():
     if current_user.username != 'Cristhian2704': return "No autorizado."
-    
-    # Filtramos usuarios con estado ACTIVO y balance mayor a 0
     usuarios = User.query.filter_by(deposito_status='ACTIVO').filter(User.balance > 0).all()
-    
     contador = 0
-    porcentaje = 0.012  # 1.2%
-
-    for u in usuarios:
-        ganancia = u.balance * porcentaje
-        u.roi_total += ganancia
-        # Registro en historial
-        db.session.add(Transaccion(
-            tipo='ROI_DIARIO', 
-            monto=ganancia, 
-            estado='APROBADO', 
-            user_id=u.id,
-            fecha=datetime.now()
-        ))
-        contador += 1
-
-    db.session.commit()
-    flash(f"¡Éxito! Se ha distribuido el 1.2% de ROI a {contador} usuarios activos.")
+    try:
+        for u in usuarios:
+            ganancia = round(u.balance * 0.012, 2)
+            u.roi_total += ganancia
+            nueva_tx = Transaccion(
+                tipo='ROI_DIARIO', 
+                monto=ganancia, 
+                estado='APROBADO', 
+                user_id=u.id,
+                fecha=datetime.now()
+            )
+            db.session.add(nueva_tx)
+            contador += 1
+        db.session.commit()
+        flash(f"¡Éxito! Se ha distribuido el ROI a {contador} usuarios.")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error: {str(e)}")
     return redirect(url_for('admin_panel'))
 
 @app.route('/aprobar_pago/<int:tx_id>', methods=['POST'])
@@ -262,17 +257,14 @@ def aprobar_pago(tx_id):
         u.deposito_status = 'ACTIVO'
         tx.estado = 'APROBADO'
         tx.fecha = datetime.now() 
-        
-        # BONO DE RED (10%)
         if u.referred_by:
             patro = User.query.get(u.referred_by)
             if patro:
-                bono = tx.monto * 0.10
+                bono = round(tx.monto * 0.10, 2)
                 patro.roi_total += bono 
                 db.session.add(Transaccion(tipo='BONO_RED', monto=bono, estado='APROBADO', user_id=patro.id, fecha=datetime.now()))
-        
         db.session.commit()
-        flash("Depósito aprobado y bonos generados.")
+        flash("Depósito aprobado.")
     return redirect(url_for('admin_panel'))
 
 @app.route('/aprobar_retiro/<int:tx_id>', methods=['POST'])
@@ -292,10 +284,7 @@ def aprobar_retiro(tx_id):
 def banear_usuario(u_id):
     if current_user.username != 'Cristhian2704': return redirect(url_for('dashboard'))
     u = User.query.get(u_id)
-    if u and u.username == 'Cristhian2704':
-        flash("No puedes banear la cuenta maestra.")
-        return redirect(url_for('admin_panel'))
-    if u:
+    if u and u.username != 'Cristhian2704':
         u.deposito_status = 'BANEADO'
         db.session.commit()
     return redirect(url_for('admin_panel'))
@@ -310,52 +299,29 @@ def ajuste_manual():
         db.session.commit()
     return redirect(url_for('admin_panel'))
 
-# --- RUTA DE RETIRO ACTUALIZADA ---
 @app.route('/solicitar_retiro', methods=['POST'])
 @login_required
 def solicitar_retiro():
-    # Validación de día (Sábados)
     if datetime.now().weekday() != 5:
         flash("Retiros solo disponibles los días Sábados.")
         return redirect(url_for('retirar'))
-        
     try:
         monto = float(request.form.get('monto', 0))
-        
-        # 1. Validación de monto mínimo ($5)
         if monto < 5:
-            flash("El monto mínimo de retiro es de $5.00 USD.")
+            flash("Mínimo $5.00 USD.")
             return redirect(url_for('retirar'))
-            
-        # 2. Validación de saldo disponible
         if monto > current_user.roi_total:
-            flash("Saldo insuficiente en tu cuenta ROI.")
+            flash("Saldo insuficiente.")
             return redirect(url_for('retirar'))
-
-        # 3. Procesar la transacción
-        fee_monto = monto * 0.05  # Comisión del 5%
-        
-        nueva_tx = Transaccion(
-            tipo='RETIRO', 
-            monto=monto, 
-            fee=fee_monto, 
-            estado='PENDIENTE', 
-            user_id=current_user.id, 
-            fecha=datetime.now()
-        )
-        
-        # 4. Restar saldo inmediatamente
+        fee_monto = round(monto * 0.05, 2)
+        nueva_tx = Transaccion(tipo='RETIRO', monto=monto, fee=fee_monto, estado='PENDIENTE', user_id=current_user.id, fecha=datetime.now())
         current_user.roi_total -= monto
-        
         db.session.add(nueva_tx)
         db.session.commit()
-        
-        flash("Solicitud de retiro enviada con éxito. El saldo ha sido descontado.")
+        flash("Solicitud enviada.")
     except Exception as e:
         db.session.rollback()
-        flash("Ocurrió un error al procesar el retiro.")
-        print(f"ERROR RETIRO: {e}")
-        
+        flash("Error procesando retiro.")
     return redirect(url_for('dashboard'))
 
 @app.route('/terminos')

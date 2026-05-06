@@ -9,4 +9,4 @@ reportlab
 PyMuPDF
 pandas
 psycopg2-binary
-APScheduler
+apscheduler

@@ -60,10 +60,11 @@ def repartir_roi_diario():
         for u in usuarios:
             ganancia = round(u.balance * 0.012, 2)
             u.roi_total += ganancia
+            # USAMOS TÉRMINOS CORTOS AQUÍ TAMBIÉN POR SEGURIDAD
             db.session.add(Transaccion(
-                tipo='ROI_DIARIO', 
+                tipo='ROI', 
                 monto=ganancia, 
-                estado='APROBADO', 
+                estado='OK', 
                 user_id=u.id,
                 fecha=datetime.now()
             ))
@@ -82,16 +83,11 @@ with app.app_context():
     
     db.create_all()
     
-    # Solo intentamos esto si estamos en producción (PostgreSQL)
     if "postgresql" in app.config.get('SQLALCHEMY_DATABASE_URI', ''):
         try:
-            # Forzamos un cierre de cualquier transacción pendiente
             db.session.execute(db.text("COMMIT;")) 
-            
-            # Ejecutamos la ampliación de columnas
             db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN tipo TYPE VARCHAR(100);"))
             db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN estado TYPE VARCHAR(100);"))
-            
             db.session.commit()
             print(">>> [SISTEMA] ¡BASE DE DATOS AMPLIADA EXITOSAMENTE! <<<")
         except Exception as e:
@@ -247,10 +243,11 @@ def pagar_roi_manual():
         for u in usuarios:
             ganancia = round(u.balance * 0.012, 2)
             u.roi_total += ganancia
+            # CAMBIO CLAVE: USAMOS 'ROI' Y 'OK' PARA QUE QUEPAN SÍ O SÍ
             nueva_tx = Transaccion(
-                tipo='ROI_DIARIO', 
+                tipo='ROI', 
                 monto=ganancia, 
-                estado='APROBADO', 
+                estado='OK', 
                 user_id=u.id,
                 fecha=datetime.now()
             )

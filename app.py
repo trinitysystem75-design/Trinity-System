@@ -45,12 +45,12 @@ class User(UserMixin, db.Model):
 
 class Transaccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(100)) # Aumentado internamente
+    tipo = db.Column(db.String(100)) 
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
     comprobante = db.Column(db.String(200), nullable=True)
     fecha = db.Column(db.DateTime, default=datetime.now) 
-    estado = db.Column(db.String(100), default='PENDIENTE') # Aumentado internamente
+    estado = db.Column(db.String(100), default='PENDIENTE') 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # --- LÓGICA DE ROI DIARIO (AUTOMÁTICO) ---
@@ -75,11 +75,22 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(func=repartir_roi_diario, trigger="cron", hour=0, minute=0)
 scheduler.start()
 
-# --- GARANTÍA DE TABLAS ---
+# --- GARANTÍA DE TABLAS Y ACTUALIZACIÓN FORZOSA (CORRECCIÓN CRÍTICA) ---
 with app.app_context():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     db.create_all()
+    
+    # Este bloque detecta si usas PostgreSQL y fuerza el cambio de 20 a 100 caracteres
+    if "postgresql" in app.config['SQLALCHEMY_DATABASE_URI']:
+        try:
+            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN tipo TYPE VARCHAR(100);"))
+            db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN estado TYPE VARCHAR(100);"))
+            db.session.commit()
+            print("Base de datos actualizada con éxito a 100 caracteres.")
+        except Exception as e:
+            db.session.rollback()
+            print(f"Aviso de actualización: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -207,7 +218,7 @@ def subir_pago():
     except: flash("Error en el monto.")
     return redirect(url_for('dashboard'))
 
-# --- RUTAS DE ADMINISTRADOR (TRINITY ROOT CENTER) ---
+# --- RUTAS DE ADMINISTRADOR ---
 
 @app.route('/system-root-portal')
 @login_required

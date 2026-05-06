@@ -63,11 +63,12 @@
                         <p class="text-[10px] font-bold text-gray-500 uppercase tracking-tighter">Saldo ROI Acumulado para Retiro</p>
                         <h3 class="text-4xl font-black text-green-400 mt-2">$ {{ "%.2f"|format(current_user.roi_total) }}</h3>
                         
-                        {% if current_user.roi_total < 10 %}
+                        <!-- LÓGICA DE MONTO MÍNIMO ACTUALIZADA A $5 -->
+                        {% if current_user.roi_total < 5 %}
                         <div class="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg flex items-center gap-3">
                             <span class="text-lg">⚠️</span>
                             <p class="text-[10px] text-red-400 font-bold uppercase italic">
-                                Necesitas al menos $10.00 en tu ROI para habilitar retiros.
+                                Necesitas al menos $5.00 en tu ROI para habilitar retiros.
                             </p>
                         </div>
                         {% endif %}
@@ -77,10 +78,10 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Monto a Retirar (USD)</label>
-                                <input type="number" name="monto" step="0.01" required 
+                                <input type="number" name="monto" min="5" step="0.01" required 
                                        class="w-full border border-gray-800 rounded-lg p-3 text-sm focus:border-green-500 outline-none font-bold"
-                                       placeholder="Mínimo $10.00"
-                                       {% if current_user.roi_total < 10 %} disabled {% endif %}>
+                                       placeholder="Mínimo $5.00"
+                                       {% if current_user.roi_total < 5 %} disabled {% endif %}>
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Red de Retiro</label>
@@ -95,13 +96,13 @@
                             <input type="text" name="wallet_destino" required 
                                    class="w-full border border-gray-800 rounded-lg p-3 text-xs font-mono focus:border-green-500 outline-none text-blue-400"
                                    placeholder="T... (TRC20)"
-                                   {% if current_user.roi_total < 10 %} disabled {% endif %}>
+                                   {% if current_user.roi_total < 5 %} disabled {% endif %}>
                             <p class="text-[9px] text-gray-600 mt-2 italic">Solo aceptamos billeteras de la red TRC20.</p>
                         </div>
 
                         <button type="submit" 
-                            class="w-full font-black py-4 rounded-xl transition uppercase text-xs tracking-widest shadow-lg {% if current_user.roi_total >= 10 %} bg-green-600 hover:bg-green-500 text-white shadow-green-900/20 {% else %} btn-disabled {% endif %}"
-                            {% if current_user.roi_total < 10 %} disabled {% endif %}>
+                            class="w-full font-black py-4 rounded-xl transition uppercase text-xs tracking-widest shadow-lg {% if current_user.roi_total >= 5 %} bg-green-600 hover:bg-green-500 text-white shadow-green-900/20 {% else %} btn-disabled {% endif %}"
+                            {% if current_user.roi_total < 5 %} disabled {% endif %}>
                             Procesar Retiro
                         </button>
                     </form>
@@ -116,7 +117,7 @@
                     <ul class="space-y-4 text-[11px]">
                         <li class="flex justify-between border-b border-gray-800/50 pb-2">
                             <span class="text-gray-500 font-medium">Monto Mínimo:</span>
-                            <span class="text-white font-black">$10.00 USD</span>
+                            <span class="text-white font-black">$5.00 USD</span>
                         </li>
                         <li class="flex justify-between border-b border-gray-800/50 pb-2">
                             <span class="text-gray-500 font-medium">Día de Retiros:</span>

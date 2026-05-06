@@ -11,6 +11,14 @@
         .status-badge { font-size: 9px; padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase; }
         .btn-action { transition: 0.2s; cursor: pointer; }
         .btn-action:hover { transform: translateY(-2px); }
+        /* Animación para el botón de ROI */
+        .btn-roi-master {
+            background: linear-gradient(90deg, #1e40af, #3b82f6);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+        }
+        .btn-roi-master:hover {
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+        }
     </style>
 </head>
 <body class="p-8">
@@ -26,6 +34,30 @@
                 <a href="/dashboard" class="text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/50 px-4 py-1 rounded mt-2 inline-block font-bold hover:bg-blue-600 hover:text-white">SALIR A DASHBOARD</a>
             </div>
         </header>
+
+        <!-- SECCIÓN DE MENSAJES FLASH (Alertas) -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="mb-6 p-4 bg-blue-900/30 border border-blue-500 text-blue-200 text-xs font-bold uppercase tracking-widest rounded-lg">
+                ⚡ INFO: {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <!-- BOTÓN MAESTRO DE DISTRIBUCIÓN DE ROI -->
+        <div class="mb-10 card-pro p-8 border-dashed border-2 border-blue-500/30 bg-blue-500/5 flex flex-col md:flex-row items-center justify-between">
+            <div class="mb-4 md:mb-0">
+                <h2 class="text-xl font-black text-white italic italic uppercase">Ejecución de ROI Diario</h2>
+                <p class="text-gray-500 text-[10px] tracking-widest uppercase">Distribución masiva del 1.2% a todas las cuentas activas</p>
+            </div>
+            <form action="/admin/pagar-roi" method="POST" onsubmit="return confirm('¿Confirmas el pago masivo del 1.2% de ROI para hoy?')">
+                <button type="submit" class="btn-roi-master text-white font-black px-10 py-4 rounded-full text-xs uppercase tracking-[0.2em] btn-action border border-blue-400">
+                    🚀 DISTRIBUIR GANANCIAS AHORA
+                </button>
+            </form>
+        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             <div class="card-pro p-6 border-l-4 border-green-500 bg-green-500/5">

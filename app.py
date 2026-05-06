@@ -75,22 +75,28 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(func=repartir_roi_diario, trigger="cron", hour=0, minute=0)
 scheduler.start()
 
-# --- GARANTÍA DE TABLAS Y ACTUALIZACIÓN FORZOSA (CORRECCIÓN CRÍTICA) ---
+# --- BOMBA DE LIMPIEZA Y ACTUALIZACIÓN DE EMERGENCIA ---
 with app.app_context():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+    
     db.create_all()
     
-    # Este bloque detecta si usas PostgreSQL y fuerza el cambio de 20 a 100 caracteres
-    if "postgresql" in app.config['SQLALCHEMY_DATABASE_URI']:
+    # Solo intentamos esto si estamos en producción (PostgreSQL)
+    if "postgresql" in app.config.get('SQLALCHEMY_DATABASE_URI', ''):
         try:
+            # Forzamos un cierre de cualquier transacción pendiente
+            db.session.execute(db.text("COMMIT;")) 
+            
+            # Ejecutamos la ampliación de columnas
             db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN tipo TYPE VARCHAR(100);"))
             db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN estado TYPE VARCHAR(100);"))
+            
             db.session.commit()
-            print("Base de datos actualizada con éxito a 100 caracteres.")
+            print(">>> [SISTEMA] ¡BASE DE DATOS AMPLIADA EXITOSAMENTE! <<<")
         except Exception as e:
             db.session.rollback()
-            print(f"Aviso de actualización: {e}")
+            print(f">>> [SISTEMA] Aviso de BD: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):

@@ -45,12 +45,12 @@ class User(UserMixin, db.Model):
 
 class Transaccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.String(20))
+    tipo = db.Column(db.String(50))
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
     comprobante = db.Column(db.String(200), nullable=True)
     fecha = db.Column(db.DateTime, default=datetime.now) 
-    estado = db.Column(db.String(20), default='PENDIENTE')
+    estado = db.Column(db.String(50), default='PENDIENTE')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 # --- LÓGICA DE ROI DIARIO (1.2%) ---

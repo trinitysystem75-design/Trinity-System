@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trinity Systems | Ecosistema de Capital y Tareas Digitales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Efectos Visuales y Neón */
+        .bg-gradient-trinity { background: radial-gradient(circle at top, #0f172a 0%, #020617 80%, #000000 100%); }
+        .neon-blue { color: #3b82f6; text-shadow: 0 0 10px rgba(59, 130, 246, 0.7), 0 0 20px rgba(59, 130, 246, 0.5); }
+        .neon-cyan { color: #06b6d4; text-shadow: 0 0 10px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.4); }
+        .neon-green { color: #10b981; text-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+
+        /* Cinta de Mercado (Ticker) */
+        .ticker-wrapper { overflow: hidden; background-color: #000000; border-bottom: 1px solid #1e293b; padding: 8px 0; display: flex; white-space: nowrap; }
+        .ticker-tape { display: inline-block; animation: tickerScroll 30s linear infinite; }
+        .ticker-item { display: inline-block; margin-right: 40px; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; font-weight: 600; color: #94a3b8; }
+        @keyframes tickerScroll { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+        /* Control de Modals Legales */
+        .modal { transition: opacity 0.25s ease; }
+        .modal-active { overflow: hidden; }
+    </style>
+</head>
+<body class="bg-gradient-trinity text-white min-h-screen flex flex-col">
+
+    <!-- 1. CINTA DE MERCADO Y ESTADO DEL SISTEMA -->
+    <div class="ticker-wrapper">
+        <div class="ticker-tape">
+            <span class="ticker-item">SISTEMA TRINITY <span class="neon-cyan">EN LÍNEA 🟢</span></span>
+            <span class="ticker-item">MERCADO XAU/USD <span class="text-green-500">2345.50 ▲ +0.45%</span></span>
+            <span class="ticker-item">BTC/USDT <span class="text-green-500">64210.00 ▲ +1.20%</span></span>
+            <span class="ticker-item">CICLO DE ROI <span class="text-yellow-500">LUN-VIE 📅</span></span>
+            <span class="ticker-item">RETIROS <span class="text-yellow-500">SÁBADOS 💰</span></span>
+            <span class="ticker-item">RED USDT TRC20 <span class="neon-green">OPERATIVA ⚡</span></span>
+        </div>
+    </div>
+
+    <!-- 2. NAVEGACIÓN Y REDES SOCIALES -->
+    <header class="bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 border-b border-blue-900/30">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            
+            <!-- Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-blue-950 border border-blue-500 flex items-center justify-center font-bold text-2xl neon-blue">⚡</div>
+                <span class="font-extrabold text-xl md:text-2xl tracking-widest neon-blue uppercase hidden sm:block">TRINITY SYSTEMS</span>
+            </div>
+
+            <!-- Redes Sociales -->
+            <div class="hidden lg:flex items-center gap-6">
+                <a href="https://x.com/TrinitySystem75" target="_blank" class="text-gray-500 hover:text-white transition-all transform hover:scale-110" title="X (Twitter)">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </a>
+                <a href="https://www.instagram.com/trinitysystem75/" target="_blank" class="text-gray-500 hover:text-pink-500 transition-all transform hover:scale-110" title="Instagram">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z" clip-rule="evenodd"/></svg>
+                </a>
+                <a href="https://www.facebook.com/TrinitySystem75/" target="_blank" class="text-gray-500 hover:text-blue-500 transition-all transform hover:scale-110" title="Facebook">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd"/></svg>
+                </a>
+                <a href="https://www.youtube.com/@TRINITYSYSTEM75" target="_blank" class="text-gray-500 hover:text-red-500 transition-all transform hover:scale-110" title="YouTube">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2.507 0 0 1 1.768-1.768C5.744 5 11.998 5 11.998 5s6.255 0 7.814.418ZM15.194 12 10 15V9l5.194 3Z" clip-rule="evenodd"/></svg>
+                </a>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-4">
+                <a href="/login" class="text-gray-300 hover:text-white font-medium px-4 py-2 transition-colors">Ingresar</a>
+                <a href="/registro" class="bg-blue-600 hover:bg-blue-400 text-white font-bold px-4 md:px-6 py-2 rounded-lg transition-all shadow-[0_0_15px_rgba(59,130,246,0.6)]">Crear Cuenta</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- [ZONA DE BANNER SUPERIOR 728x90 CÓDIGO INTEGRADO ADSTERRA] -->
+    <div class="w-full flex justify-center mt-6 px-4">
+        <div class="bg-transparent overflow-hidden flex items-center justify-center min-h-[90px] w-full max-w-[728px]">
+            
+            <!-- CÓDIGO DE ADSTERRA -->
+            <script>
+                atOptions = {
+                    'key' : '1087fe7969a5d7b6ce4173e18e8eb054',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                };
+            </script>
+            <script src="https://www.highperformanceformat.com/1087fe7969a5d7b6ce4173e18e8eb054/invoke.js"></script>
+
+        </div>
+    </div>
+
+    <!-- 3. HERO SECTION -->
+    <main class="flex-grow flex items-center justify-center px-6 py-16 relative overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div class="max-w-5xl mx-auto text-center relative z-10">
+            <div class="inline-flex items-center gap-2 mb-8 px-5 py-2 rounded-full border border-cyan-500/40 bg-cyan-500/10 text-cyan-400 text-sm font-bold tracking-widest uppercase">
+                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                Red de Monetización Activa
+            </div>
+            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tight leading-tight">
+                El Futuro de la Liquidez <br>
+                <span class="neon-cyan">Automatizada y Misiones Digitales</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-4xl mx-auto leading-relaxed">
+                Trinity Systems es la red definitiva que fusiona <strong>algoritmos de gestión de capital de alta precisión</strong> con un ecosistema de tareas respaldado por marcas internacionales. Maximiza tu tiempo y pon a trabajar tu capital bajo un modelo estrictamente estructurado y sostenible a largo plazo.
+            </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-6">
+                <a href="/registro" class="bg-cyan-500 hover:bg-cyan-400 text-gray-950 text-lg font-extrabold px-10 py-4 rounded-xl transition-all shadow-[0_0_30px_rgba(6,182,212,0.5)] uppercase tracking-wide">
+                    🚀 Iniciar Operaciones
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- 4. LA ARQUITECTURA FINANCIERA -->
+    <section id="ecosistema" class="bg-gray-900 py-24 px-6 relative border-t border-blue-900/30">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-20">
+                <h2 class="text-3xl md:text-5xl font-extrabold mb-6">La Arquitectura de <span class="text-blue-500">Nuestros Ingresos</span></h2>
+                <p class="text-gray-400 max-w-3xl mx-auto text-lg leading-relaxed">
+                    Nuestro modelo de negocio se basa en la interacción directa con anunciantes globales y una rigurosa gestión financiera. Así es como la red Trinity genera y distribuye beneficios reales.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 hover:border-blue-500/50 transition-all group">
+                    <div class="w-14 h-14 bg-blue-900/30 rounded-xl flex items-center justify-center text-blue-400 text-2xl mb-6">📈</div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Gestión de Capital (ROI)</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Al activar tu cuenta mediante un aporte de liquidez, participas en los rendimientos globales del sistema. Nuestra infraestructura tecnológica distribuye un <strong>Retorno de Inversión (ROI) automatizado de Lunes a Viernes</strong>, respetando los ciclos de cierre comerciales.
+                    </p>
+                </div>
+                
+                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 hover:border-cyan-500/50 transition-all group">
+                    <div class="w-14 h-14 bg-cyan-900/30 rounded-xl flex items-center justify-center text-cyan-400 text-2xl mb-6">🎯</div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Monetización Corporativa</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Mantenemos contratos con múltiples marcas y redes corporativas de publicidad global. Ellos nos pagan por derivarles tráfico real. Tú completas misiones interactuando con estas marcas y nosotros compartimos las ganancias contigo de forma inmediata.
+                    </p>
+                </div>
+                
+                <div class="bg-gray-950 p-8 rounded-2xl border border-gray-800 hover:border-yellow-500/50 transition-all group">
+                    <div class="w-14 h-14 bg-yellow-900/30 rounded-xl flex items-center justify-center text-yellow-400 text-2xl mb-6">⚖️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-white">Normativa de Retiros (Fee)</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        Para asegurar la liquidez estable del sistema, los retiros están estructurados de manera eficiente. Las solicitudes de pago se procesan <strong>únicamente los días Sábados</strong>, aplicando un <strong>Fee porcentual (%) de mantenimiento</strong> por cada transacción realizada.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. EL MURO DE TAREAS PRINCIPAL (INTEGRADO EN EL INDEX) -->
+    <section class="bg-gray-950 py-24 px-6 border-t border-gray-800">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            
+            <div>
+                <h2 class="text-3xl md:text-5xl font-extrabold mb-6">Misiones Digitales: <br><span class="neon-cyan">Capitaliza tu Tiempo</span></h2>
+                <p class="text-gray-400 mb-8 text-lg leading-relaxed">
+                    Las marcas corporativas invierten millones en marketing digital y tráfico. A través de nuestra plataforma, tú ejecutas las tareas requeridas de interacción y validación, y el saldo se acredita directo a tu balance retirable.
+                </p>
+            </div>
+            
+            <!-- CONTENEDOR DEL MURO DE TAREAS REAL -->
+            <div class="bg-black p-6 rounded-2xl border border-gray-800 shadow-[0_0_40px_rgba(6,182,212,0.1)] relative">
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-t-2xl"></div>
+                <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-800">
+                    <span class="text-gray-400 font-mono text-sm">Muro Central de Tareas Oficial</span>
+                    <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold">SISTEMA CONECTADO</span>
+                </div>
+                
+                <!-- ESPACIO RESERVADO PARA EL MURO (IFRAME O SCRIPTS DE CPALEAD / ANUNCIOS) -->
+                <div class="w-full bg-gray-900/50 rounded-xl min-h-[350px] border border-gray-800 flex flex-col items-center justify-center p-4">
+                    <!-- 🚨 CUANDO TENGAS EL IFRAME DEL OFFERWALL / MURO DE TAREAS, LO PEGAS AQUÍ ADENTRO -->
+                    <div class="text-center space-y-4 font-mono max-w-sm">
+                        <div class="text-cyan-400 text-3xl animate-pulse">⚙️</div>
+                        <p class="text-gray-400 text-xs">El Muro Operativo se activa automáticamente al iniciar sesión con su cuenta asignada.</p>
+                        <a href="/login" class="inline-block bg-blue-600/20 text-blue-400 border border-blue-500/30 text-xs px-4 py-2 rounded hover:bg-blue-600 hover:text-white transition-all">Ver Misiones en Vivo</a>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
+    <!-- 6. FAQ (PARÁMETROS OPERATIVOS) -->
+    <section class="bg-gray-900 py-24 px-6 border-t border-gray-800">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-4 text-center text-white">Parámetros Operativos (FAQ)</h2>
+            <div class="space-y-4 mt-12">
+                <div class="bg-gray-950 p-6 rounded-xl border border-gray-800">
+                    <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-blue-500">■</span> ¿Qué días se acredita el ROI en mi cuenta?</h4>
+                    <p class="text-gray-400 text-sm">El Retorno de Inversión (ROI) derivado de tu capital en gestión se acredita automáticamente de <strong>Lunes a Viernes</strong> a la medianoche.</p>
+                </div>
+                <div class="bg-gray-950 p-6 rounded-xl border border-gray-800">
+                    <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-cyan-500">■</span> ¿Cuándo y cómo puedo retirar mis ganancias?</h4>
+                    <p class="text-gray-400 text-sm">Los retiros están habilitados <strong>únicamente los días Sábados</strong> y se procesan exclusivamente en criptomonedas a través de la red Tron (USDT TRC20) vía Binance Pay.</p>
+                </div>
+                <div class="bg-gray-950 p-6 rounded-xl border border-gray-800">
+                    <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2"><span class="text-yellow-500">■</span> ¿Existe alguna comisión por retirar mi dinero?</h4>
+                    <p class="text-gray-400 text-sm">Sí, se aplica un <strong>Fee porcentual estándar</strong> sobre cada retiro para cubrir los costos técnicos, comisiones de red de la blockchain y la estabilidad de la plataforma.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MEGA FOOTER INSTITUCIONAL -->
+    <footer class="bg-gray-950 border-t border-blue-900/30 pt-16 pb-8 px-6">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+            <div>
+                <div class="flex items-center gap-2 mb-6">
+                    <div class="w-8 h-8 rounded bg-blue-900 border border-blue-500 flex items-center justify-center font-bold text-lg neon-blue">⚡</div>
+                    <span class="font-extrabold text-xl tracking-widest text-white uppercase">TRINITY</span>
+                </div>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">Red de asignación de activos digitales y monetización publicitaria. Desarrollado con tecnología de alta precisión para operaciones 24/7.</p>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-green-500 text-xs font-bold tracking-widest uppercase">Servidores Activos</span>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Plataforma</h4>
+                <ul class="space-y-4 text-sm text-gray-500">
+                    <li><a href="/login" class="hover:text-cyan-400 transition-colors">Panel de Control</a></li>
+                    <li><a href="/registro" class="hover:text-cyan-400 transition-colors">Crear Cuenta</a></li>
+                    <li><a href="#ecosistema" class="hover:text-cyan-400 transition-colors">Modelo de Negocio</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Transparencia Legal</h4>
+                <ul class="space-y-4 text-sm text-gray-500">
+                    <li><a href="javascript:void(0)" onclick="toggleModal('modal-terms')" class="hover:text-blue-400 transition-colors font-bold text-gray-400">📜 Términos y Condiciones</a></li>
+                    <li><a href="javascript:void(0)" onclick="toggleModal('modal-privacy')" class="hover:text-blue-400 transition-colors font-bold text-gray-400">🔒 Políticas de Privacidad</a></li>
+                    <li><span class="text-gray-600 block mt-2">Registro Operativo: EC-2026</span></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Contacto Oficial</h4>
+                <ul class="space-y-4 text-sm text-gray-500 mb-6">
+                    <li class="flex items-start gap-3"><span>📍</span><span>Av. Principal y Zona Comercial<br>Guayas, Ecuador</span></li>
+                    <li class="flex items-center gap-3"><span>✉️</span><span>soporte@trinity-system75.com</span></li>
+                </ul>
+                <div class="flex gap-3">
+                    <div class="bg-gray-900 border border-gray-800 p-2 rounded text-xs font-bold text-gray-400">🔒 SSL SECURE</div>
+                    <div class="bg-gray-900 border border-gray-800 p-2 rounded text-xs font-bold text-gray-400">🛡️ VERIFIED</div>
+                </div>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto border-t border-gray-800/60 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p class="text-gray-600 text-xs font-mono">&copy; 2026 TRINITY ROOT NETWORK. RUC / Reg. Digital Activo.</p>
+        </div>
+    </footer>
+
+    <!-- ========================================== -->
+    <!--  VENTANA EMERGENTE: TÉRMINOS Y CONDICIONES  -->
+    <!-- ========================================== -->
+    <div id="modal-terms" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-950">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">📜 Términos y Condiciones de Servicio</h3>
+                <button onclick="toggleModal('modal-terms')" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-sm text-gray-400 leading-relaxed font-mono">
+                <p class="text-white font-bold">1. ACEPTACIÓN DE LOS TÉRMINOS</p>
+                <p>Al acceder y registrarse en Trinity Systems (en adelante, "la plataforma"), el usuario acepta cumplir y estar sujeto a los presentes términos y condiciones generales de servicio.</p>
+                
+                <p class="text-white font-bold">2. MODELO DE OPERACIÓN Y RECOMPENSAS</p>
+                <p>La plataforma actúa como un sistema de asignación de activos publicitarios mediante tareas y gestión de liquidez. Las asignaciones de Retorno de Inversión (ROI) automatizadas se ejecutarán estrictamente de Lunes a Viernes.</p>
+                
+                <p class="text-white font-bold">3. POLÍTICA DE RETIROS Y COMISIONES (FEES)</p>
+                <p>Las solicitudes de retiro de capital acumulado se procesarán de manera exclusiva los días Sábados. Cada retiro está sujeto a un Fee porcentual (%) fijo retenido de manera automática por el sistema para cubrir el mantenimiento técnico de los nodos e infraestructura blockchain.</p>
+                
+                <p class="text-white font-bold">4. SISTEMA DE TRANSACCIONES</p>
+                <p>Todas las transacciones de fondeo y liquidación se realizan bajo redes descentralizadas mediante el activo Tether (USDT) en la red Tron (TRC20). La plataforma no se responsabiliza por errores en el ingreso de direcciones alfa-numéricas por parte del usuario.</p>
+            </div>
+            <div class="p-4 border-t border-gray-800 bg-gray-950 flex justify-end">
+                <button onclick="toggleModal('modal-terms')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-lg text-sm">Entendido y Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!--  VENTANA EMERGENTE: POLÍTICA DE PRIVACIDAD  -->
+    <!-- ========================================== -->
+    <div id="modal-privacy" class="modal opacity-0 pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-950">
+                <h3 class="text-xl font-bold text-white flex items-center gap-2">🔒 Política de Privacidad de Datos</h3>
+                <button onclick="toggleModal('modal-privacy')" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-sm text-gray-400 leading-relaxed font-mono">
+                <p class="text-white font-bold">1. RESGUARDO DE INFORMACIÓN</p>
+                <p>Trinity Systems implementa protocolos de cifrado avanzado de extremo a extremo para asegurar que la información de registro, credenciales de acceso e identificadores de billeteras criptográficas permanezcan completamente protegidos.</p>
+                
+                <p class="text-white font-bold">2. USO DE DATOS OPERATIVOS</p>
+                <p>La recopilación de logs técnicos y de IPs de navegación se realiza única y exclusivamente para auditar que las misiones publicitarias diarias sean completadas por usuarios reales, evitando ataques de inyección de código o scripts de automatización no autorizados.</p>
+                
+                <p class="text-white font-bold">3. ENLACES DE REDES SOCIALES</p>
+                <p>Nuestra plataforma contiene accesos directos a los canales comunitarios oficiales en X, Instagram, Facebook y YouTube. La interacción en dichos canales externos queda sujeta a las políticas de privacidad de cada red social respectiva.</p>
+            </div>
+            <div class="p-4 border-t border-gray-800 bg-gray-950 flex justify-end">
+                <button onclick="toggleModal('modal-privacy')" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-2 rounded-lg text-sm">Entendido y Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT JAVASCRIPT PARA ABRIR Y CERRAR VENTANAS EN SEGUNDOS -->
+    <script>
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('opacity-0');
+            modal.classList.toggle('pointer-events-none');
+            document.body.classList.toggle('modal-active');
+        }
+    </script>
+
+</body>
+</html>

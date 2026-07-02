@@ -41,26 +41,39 @@ class User(UserMixin, db.Model):
     balance = db.Column(db.Float, default=0.0)      
     roi_total = db.Column(db.Float, default=0.0)    
     deposito_status = db.Column(db.String(20), default='INACTIVO')
+    saldo_tareas = db.Column(db.Float, default=0.0)
     transacciones = db.relationship('Transaccion', backref='dueno', lazy=True)
 
 class Transaccion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    tipo = db.Column(db.Text) # TEXT para evitar límites de caracteres
+    tipo = db.Column(db.Text) 
     monto = db.Column(db.Float)    
     fee = db.Column(db.Float, default=0.0) 
-    comprobante = db.Column(db.Text, nullable=True) # TEXT para evitar límites de caracteres
+    comprobante = db.Column(db.Text, nullable=True) 
     fecha = db.Column(db.DateTime, default=datetime.now) 
-    estado = db.Column(db.Text, default='PENDIENTE') # TEXT para evitar límites de caracteres
+    estado = db.Column(db.Text, default='PENDIENTE') 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
-# --- LÓGICA DE ROI DIARIO ---
+class TareasCompletadas(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    tarea_id = db.Column(db.String(100), nullable=False)
+    monto_pagado = db.Column(db.Float, default=0.0)
+    estado = db.Column(db.String(20), default="Aprobado")
+    fecha = db.Column(db.DateTime, default=datetime.now)
+
+# --- LÓGICA DE ROI DIARIO (SOLO LUNES A VIERNES) ---
 def repartir_roi_diario():
     with app.app_context():
+        # Filtro de seguridad interno por si se llama la función manualmente
+        if datetime.now().weekday() > 4: 
+            print(f"Fin de semana detectado. No se reparte ROI.")
+            return
+
         usuarios = User.query.filter(User.balance > 0, User.deposito_status == 'ACTIVO').all()
         for u in usuarios:
             ganancia = round(u.balance * 0.012, 2)
             u.roi_total += ganancia
-            # Forzamos comprobante como string vacío para evitar errores de None
             db.session.add(Transaccion(
                 tipo='ROI', 
                 monto=ganancia, 
@@ -72,9 +85,9 @@ def repartir_roi_diario():
         db.session.commit()
         print(f"ROI automático repartido: {datetime.now()}")
 
-# --- SCHEDULER ---
+# --- SCHEDULER (Configurado para días hábiles) ---
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=repartir_roi_diario, trigger="cron", hour=0, minute=0)
+scheduler.add_job(func=repartir_roi_diario, trigger="cron", day_of_week='mon-fri', hour=0, minute=0)
 scheduler.start()
 
 # Forzamos la creación de carpetas y actualización de BD al inicio
@@ -82,7 +95,13 @@ with app.app_context():
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
     db.create_all()
-    # Esta línea intenta forzar el cambio en PostgreSQL si detecta que las columnas son limitadas
+    
+    try:
+        db.session.execute(db.text("ALTER TABLE tareas_completadas ADD COLUMN monto_pagado FLOAT DEFAULT 0.0;"))
+        db.session.commit()
+    except:
+        db.session.rollback()
+        
     if "postgresql" in app.config.get('SQLALCHEMY_DATABASE_URI', ''):
         try:
             db.session.execute(db.text("ALTER TABLE transaccion ALTER COLUMN tipo TYPE TEXT;"))
@@ -98,9 +117,10 @@ def load_user(user_id):
     if user and user.deposito_status == 'BANEADO': return None
     return user
 
-# --- RUTAS ---
+# --- RUTAS DE NAVEGACIÓN GENERAL ---
 @app.route('/')
-def home(): return redirect(url_for('login'))
+def home(): 
+    return render_template('index.html')
 
 @app.route('/login')
 def login(): return render_template('login.html')
@@ -203,7 +223,83 @@ def subir_pago():
     except: flash("Error.")
     return redirect(url_for('dashboard'))
 
-# --- PANEL ADMIN ---
+# --- SISTEMA DE MISIONES Y ANUNCIOS ---
+
+@app.route('/panel/tareas')
+@login_required
+def panel_tareas():
+    tareas_realizadas = TareasCompletadas.query.filter_by(usuario_id=current_user.id, estado='Aprobado').count()
+    ganancia_acumulada = current_user.saldo_tareas
+    link_ref = f"{DOMINIO_OFICIAL}/registro?ref={current_user.id}"
+    return render_template('tareas.html', link_ref=link_ref, tareas_realizadas=tareas_realizadas, ganancia_acumulada=ganancia_acumulada)
+
+@app.route('/retiro_tareas', methods=['POST'])
+@login_required
+def retiro_tareas():
+    if datetime.now().weekday() != 5:
+        flash("Los retiros de misiones solo están habilitados los días Sábados.")
+        return redirect(url_for('panel_tareas'))
+    
+    try:
+        monto = float(request.form.get('monto', 0))
+        nombre = request.form.get('nombre')
+        binance_id = request.form.get('binance_id')
+        
+        if monto >= 5.0 and monto <= current_user.saldo_tareas:
+            fee_monto = round(monto * 0.05, 2) # Fee del 5% aplicado a las misiones
+            detalles_pago = f"Binance ID: {binance_id} | Titular: {nombre}"
+            
+            nueva_tx = Transaccion(
+                tipo='RETIRO_TAREAS', 
+                monto=monto, 
+                fee=fee_monto,
+                estado='PENDIENTE', 
+                comprobante=detalles_pago, 
+                user_id=current_user.id, 
+                fecha=datetime.now()
+            )
+            current_user.saldo_tareas -= monto
+            db.session.add(nueva_tx)
+            db.session.commit()
+            flash("✅ ¡Solicitud de retiro enviada exitosamente! En breve la procesaremos.")
+        else:
+            flash("❌ Saldo insuficiente o monto menor al límite mínimo estipulado ($5.00 USD).")
+    except:
+        flash("❌ Hubo un error al procesar la solicitud.")
+        
+    return redirect(url_for('panel_tareas'))
+
+@app.route('/webhook/reward', methods=['GET', 'POST'])
+def webhook_reward():
+    token_seguridad = request.args.get('secret')
+    if token_seguridad != 'trinity_secure_2026':
+        return "Acceso denegado. Token inválido.", 403
+        
+    user_id = request.args.get('user_id')
+    monto = request.args.get('monto')
+    tarea_id = request.args.get('tarea_id', 'Oferta_Automatica')
+    
+    if user_id and monto:
+        user = User.query.get(int(user_id))
+        if user:
+            try:
+                valor_monto = float(monto)
+                user.saldo_tareas += valor_monto
+                registro_mision = TareasCompletadas(
+                    usuario_id=user.id,
+                    tarea_id=tarea_id,
+                    monto_pagado=valor_monto,
+                    estado='Aprobado'
+                )
+                db.session.add(registro_mision)
+                db.session.commit()
+                return "OK", 200
+            except:
+                db.session.rollback()
+                return "Error procesando el monto numérico.", 400
+    return "Datos incompletos.", 400
+
+# --- PANEL ADMIN CONTROLES ---
 
 @app.route('/system-root-portal')
 @login_required
@@ -211,10 +307,14 @@ def admin_panel():
     if current_user.username != 'Cristhian2704': return redirect(url_for('dashboard'))
     usuarios = User.query.all()
     pagos = Transaccion.query.filter_by(estado='PENDIENTE', tipo='DEPÓSITO').all()
+    
     retiros = Transaccion.query.filter_by(estado='PENDIENTE', tipo='RETIRO').all()
+    retiros_tareas = Transaccion.query.filter_by(estado='PENDIENTE', tipo='RETIRO_TAREAS').all()
+    
     cap_total = db.session.query(func.sum(User.balance)).scalar() or 0.0
     roi_pagar = db.session.query(func.sum(User.roi_total)).scalar() or 0.0
-    return render_template('admin_trinity.html', usuarios=usuarios, pagos=pagos, retiros=retiros, capital_total=cap_total, roi_por_pagar=roi_pagar)
+    
+    return render_template('admin_trinity.html', usuarios=usuarios, pagos=pagos, retiros=retiros, retiros_tareas=retiros_tareas, capital_total=cap_total, roi_por_pagar=roi_pagar)
 
 @app.route('/admin/pagar-roi', methods=['POST'])
 @login_required
@@ -226,16 +326,14 @@ def pagar_roi_manual():
         for u in usuarios:
             ganancia = round(u.balance * 0.012, 2)
             u.roi_total += ganancia
-            # Comprobante vacío para evitar error de base de datos
-            nueva_tx = Transaccion(
+            db.session.add(Transaccion(
                 tipo='ROI', 
                 monto=ganancia, 
                 estado='OK', 
                 comprobante='', 
                 user_id=u.id,
                 fecha=datetime.now()
-            )
-            db.session.add(nueva_tx)
+            ))
             contador += 1
         db.session.commit()
         flash(f"Éxito: {contador} ROIs pagados.")
@@ -297,19 +395,35 @@ def ajuste_manual():
 @login_required
 def solicitar_retiro():
     if datetime.now().weekday() != 5:
-        flash("Solo Sábados.")
+        flash("Los retiros de ROI solo están habilitados los días Sábados.")
         return redirect(url_for('retirar'))
     try:
         monto = float(request.form.get('monto', 0))
+        nombre_binance = request.form.get('nombre_binance', '')
+        binance_id = request.form.get('binance_id', '')
+
         if monto >= 5 and monto <= current_user.roi_total:
             fee_monto = round(monto * 0.05, 2)
-            nueva_tx = Transaccion(tipo='RETIRO', monto=monto, fee=fee_monto, estado='PENDIENTE', comprobante='', user_id=current_user.id, fecha=datetime.now())
+            detalles_retiro = f"Binance: {binance_id} | Nombre: {nombre_binance}"
+            
+            nueva_tx = Transaccion(
+                tipo='RETIRO', 
+                monto=monto, 
+                fee=fee_monto, 
+                estado='PENDIENTE', 
+                comprobante=detalles_retiro, 
+                user_id=current_user.id, 
+                fecha=datetime.now()
+            )
             current_user.roi_total -= monto
             db.session.add(nueva_tx)
             db.session.commit()
-            flash("Enviado.")
-    except: flash("Error.")
-    return redirect(url_for('dashboard'))
+            flash("✅ Solicitud de retiro enviada correctamente.")
+        else:
+            flash("❌ Saldo insuficiente o no cumples con el mínimo de $5.")
+    except: 
+        flash("❌ Error al procesar tu solicitud.")
+    return redirect(url_for('retirar'))
 
 @app.route('/terminos')
 def terminos(): return render_template('terminos.html')
@@ -324,4 +438,4 @@ def logout():
     return redirect(url_for('login'))
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

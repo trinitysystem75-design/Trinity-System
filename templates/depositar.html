@@ -15,8 +15,6 @@
         input { background-color: #000000 !important; color: #ffffff !important; }
         input::placeholder { color: #484f58; }
         .address-box { background: #000000; border: 1px dashed #30363d; border-radius: 8px; }
-        
-        /* Estilo para la Caja VIP */
         .vip-box {
             background: linear-gradient(145deg, #1c2128, #161b22);
             border: 1px solid rgba(0, 136, 204, 0.4);
@@ -44,9 +42,7 @@
                        class="w-full bg-black text-[10px] p-2 rounded border border-gray-700 font-mono outline-none text-gray-400">
                 <button onclick="copySidebar()" 
                         class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded transition shadow-lg shadow-blue-500/20">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
+                    <i class="fas fa-copy"></i>
                 </button>
             </div>
         </div>
@@ -56,7 +52,7 @@
     <div class="main-content w-full">
         <header class="mb-10 text-left">
             <h2 class="text-2xl font-bold italic uppercase">Fondeo de Capital</h2>
-            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Activa tu bot mediante transferencia segura</p>
+            <p class="text-gray-500 text-[10px] uppercase tracking-widest">Activa tu bot mediante Binance Pay</p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl">
@@ -65,16 +61,15 @@
                 
                 <div class="card-pro p-8 border-l-4 border-blue-500">
                     <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-blue-400 font-black text-xs uppercase tracking-widest">Opción: USDT (TRC20)</h3>
-                        <span class="text-[10px] bg-green-900/30 text-green-400 px-2 py-1 rounded font-bold">RED TRON</span>
+                        <h3 class="text-blue-400 font-black text-xs uppercase tracking-widest">Opción: Binance Pay</h3>
+                        <span class="text-[10px] bg-green-900/30 text-green-400 px-2 py-1 rounded font-bold">RECOMENDADO</span>
                     </div>
                     
-                    <p class="text-gray-400 text-xs mb-4 italic">Envía solo USDT a través de la red TRC20 para asegurar la recepción de fondos.</p>
+                    <p class="text-gray-400 text-xs mb-4 italic">Envía USDT a través de Binance Pay para una activación rápida y sin comisiones.</p>
                     
                     <div class="address-box p-4 mb-4 flex items-center justify-between">
-                        <input type="text" value="TAtfyUoBHr42iJVsVou6nM6ghK5hZPzAmg" id="usdtWallet" readonly 
-                                class="bg-transparent border-none text-blue-400 text-sm font-mono w-full outline-none">
-                        <button onclick="copyWallet()" class="bg-gray-800 p-2 rounded hover:bg-gray-700 transition">📋</button>
+                        <span class="text-blue-400 text-sm font-mono w-full">Pay ID: 389165775</span>
+                        <button onclick="copyBinanceId()" class="bg-gray-800 p-2 rounded hover:bg-gray-700 transition">📋</button>
                     </div>
 
                     <div class="mt-4 p-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg text-center">
@@ -92,8 +87,8 @@
                             <label class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Monto Enviado (USD)</label>
                             <input type="number" name="monto_enviado" step="0.01" min="30" required 
                                    class="w-full border border-gray-800 rounded-lg p-3 text-sm focus:border-blue-500 outline-none font-bold font-mono"
-                                   placeholder="Ej: 100.00">
-                            <p class="text-[9px] text-blue-400 mt-2 font-bold uppercase italic">* Asegúrate de incluir el costo de comisión de tu Wallet</p>
+                                   placeholder="Ej: 30.00">
+                            <p class="text-[9px] text-blue-400 mt-2 font-bold uppercase italic">* Asegúrate de incluir el monto exacto de tu transferencia.</p>
                         </div>
 
                         <div class="border-2 border-dashed border-gray-800 rounded-xl p-8 text-center hover:border-blue-500 transition cursor-pointer bg-black/30 relative">
@@ -101,7 +96,7 @@
                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*">
                             <div class="space-y-2">
                                 <span class="text-3xl block">📁</span>
-                                <span class="text-xs text-gray-500 block uppercase font-bold" id="fileName">Sube la captura de tu envío</span>
+                                <span class="text-xs text-gray-500 block uppercase font-bold" id="fileName">Sube la captura de tu pago en Binance</span>
                             </div>
                         </div>
 
@@ -112,7 +107,7 @@
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: REGLAS Y COMUNIDAD -->
+            <!-- COLUMNA DERECHA: REGLAS -->
             <div class="lg:col-span-1 space-y-4">
                 <div class="bg-blue-900/10 border border-blue-500/20 p-6 rounded-xl">
                     <h3 class="text-blue-400 font-black text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center">
@@ -124,8 +119,8 @@
                             <span class="text-white font-black">$30.00 USD</span>
                         </li>
                         <li class="flex justify-between border-b border-gray-800/50 pb-2">
-                            <span class="text-gray-500 font-medium">Red de Envío:</span>
-                            <span class="text-green-400 font-black italic">TRC20 Only</span>
+                            <span class="text-gray-500 font-medium">Método:</span>
+                            <span class="text-green-400 font-black italic">Binance Pay</span>
                         </li>
                         <li class="pt-2">
                             <div class="bg-blue-500/5 border border-blue-500/20 p-3 rounded-lg">
@@ -137,7 +132,6 @@
                     </ul>
                 </div>
 
-                <!-- SECCIÓN COMUNIDAD VIP (ACTUALIZADA) -->
                 <div class="vip-box p-6 rounded-xl text-center border-blue-500/30 shadow-xl">
                     <p class="text-[9px] text-blue-400 font-black uppercase tracking-[0.3em] mb-3">Acceso Exclusivo</p>
                     <h3 class="text-white font-bold text-sm mb-4">Trinity Elite: Comunidad VIP 💎</h3>
@@ -146,45 +140,31 @@
                        class="inline-block w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg transition-all transform hover:scale-105 shadow-lg shadow-blue-500/20 text-[11px] uppercase tracking-wider">
                         <i class="fab fa-telegram-plane mr-2"></i> Unirme al Grupo
                     </a>
-                    
-                    <p class="text-[9px] text-gray-500 mt-4 leading-relaxed italic">
-                        Mira los resultados de la comunidad y el respaldo del staff en tiempo real.
-                    </p>
                 </div>
             </div>
         </div>
 
         <footer class="mt-20 py-8 border-t border-gray-800 text-center">
-            <div class="space-x-4 text-[10px] text-gray-500 uppercase font-bold tracking-widest">
-                <a href="/terminos" class="hover:text-blue-400 transition">Términos y Condiciones</a>
-                <span>|</span>
-                <a href="/privacidad" class="hover:text-blue-400 transition">Política de Privacidad</a>
-            </div>
             <p class="text-[9px] text-gray-600 mt-2 uppercase">© 2026 Trinity Systems. Todos los derechos reservados.</p>
         </footer>
     </div>
 
     <script>
-        function copyWallet() {
-            var copyText = document.getElementById("usdtWallet");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999);
-            navigator.clipboard.writeText(copyText.value);
-            alert("Billetera USDT (TRC20) copiada con éxito.");
+        function copyBinanceId() {
+            navigator.clipboard.writeText("389165775");
+            alert("Pay ID 389165775 copiado con éxito.");
         }
 
         function copySidebar() {
             var copyText = document.getElementById("sidebarRef");
             copyText.select();
-            copyText.setSelectionRange(0, 99999);
             navigator.clipboard.writeText(copyText.value);
-            alert("Enlace de referido copiado al portapapeles.");
+            alert("Enlace copiado.");
         }
 
         document.getElementById('fileInput').onchange = function () {
             if(this.files.length > 0) {
                 document.getElementById('fileName').innerHTML = "Archivo: " + this.files[0].name;
-                document.getElementById('fileName').classList.remove('text-gray-500');
                 document.getElementById('fileName').classList.add('text-green-400');
             }
         };

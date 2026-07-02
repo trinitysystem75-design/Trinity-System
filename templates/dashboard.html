@@ -26,6 +26,7 @@
                 <a href="/mi_red" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">👥 Mi Red</a>
                 <a href="/depositar" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">💰 Depositar</a>
                 <a href="/retirar" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">🏧 Retiros</a>
+                <a href="{{ url_for('panel_tareas') }}" class="nav-link flex items-center p-3 text-sm font-semibold text-gray-400">📋 Tareas</a>
             </nav>
         </div>
 
@@ -102,6 +103,22 @@
             </script>
         </div>
 
+        <!-- ZONA DEL BANNER PUBLICITARIO (CÓDIGO DE ADSTERRA INTEGRADO) -->
+        <div class="mb-8 w-full flex justify-center">
+            <div style="width: 100%; max-width: 728px; text-align: center; background: rgba(31, 111, 235, 0.05); border: 1px dashed #1f6feb; border-radius: 8px; padding: 15px; display: flex; align-items: center; justify-content: center; min-height: 90px; overflow: hidden;">
+                <script>
+                  atOptions = {
+                    'key' : '1087fe7969a5d7b6ce4173e18e8eb054',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                  };
+                </script>
+                <script src="https://www.highperformanceformat.com/1087fe7969a5d7b6ce4173e18e8eb054/invoke.js"></script>
+            </div>
+        </div>
+
         <div class="card-pro overflow-hidden">
             <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/30">
                 <h4 class="text-xs font-black uppercase tracking-widest text-blue-400 italic">Auditoría de Movimientos</h4>
@@ -120,16 +137,18 @@
                     <tbody class="divide-y divide-gray-800">
                         {% for tx in historial %}
                         <tr class="hover:bg-gray-800/30 transition">
-                            <td class="p-4 text-gray-400 font-mono italic">{{ tx.fecha }}</td>
+                            <td class="p-4 text-gray-400 font-mono italic">{{ tx.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
                             <td class="p-4 font-black italic">
                                 {% if tx.tipo == 'DEPÓSITO' %} <span class="text-blue-400 uppercase">DEPÓSITO</span>
                                 {% elif tx.tipo == 'RETIRO' %} <span class="text-red-400 uppercase">RETIRO</span>
                                 {% elif tx.tipo == 'BONO_RED' %} <span class="text-purple-400 uppercase">BONO DE RED (10%)</span>
+                                {% elif tx.tipo == 'ROI' %} <span class="text-green-400 uppercase">ROI DIARIO (1.2%)</span>
+                                {% else %} <span class="text-gray-400 uppercase">{{ tx.tipo }}</span>
                                 {% endif %}
                             </td>
                             <td class="p-4 font-black text-white font-mono">$ {{ "%.2f"|format(tx.monto) }}</td>
                             <td class="p-4">
-                                {% if tx.estado == 'APROBADO' %}
+                                {% if tx.estado == 'APROBADO' or tx.estado == 'OK' or tx.estado == 'COMPLETADO' %}
                                     <span class="text-green-500 bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20 text-[9px] font-bold uppercase italic">Completado</span>
                                 {% elif tx.estado == 'PENDIENTE' %}
                                     <span class="text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20 text-[9px] font-bold uppercase italic">Procesando...</span>

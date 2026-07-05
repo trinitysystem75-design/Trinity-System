@@ -269,35 +269,46 @@ def retiro_tareas():
         
     return redirect(url_for('panel_tareas'))
 
-@app.route('/webhook/reward', methods=['GET', 'POST'])
-def webhook_reward():
-    token_seguridad = request.args.get('secret')
-    if token_seguridad != 'trinity_secure_2026':
-        return "Acceso denegado. Token inválido.", 403
+# === [NUEVO WEBHOOK EXCLUSIVO CPALEAD] ===
+@app.route('/webhook/cpalead', methods=['GET', 'POST'])
+def webhook_cpalead():
+    # 1. Contraseña de seguridad (la configuraremos luego en CPALead)
+    token_seguridad = request.args.get('password')
+    if token_seguridad != 'trinity_cpalead_2026':
+        return "Acceso denegado. Password invalido.", 403
         
-    user_id = request.args.get('user_id')
-    monto = request.args.get('monto')
-    tarea_id = request.args.get('tarea_id', 'Oferta_Automatica')
+    user_id = request.args.get('subid')
+    monto_puntos = request.args.get('puntos')
+    tarea_id = request.args.get('oferta', 'Mision_CPALead')
     
-    if user_id and monto:
+    if user_id and monto_puntos:
         user = User.query.get(int(user_id))
         if user:
             try:
-                valor_monto = float(monto)
-                user.saldo_tareas += valor_monto
+                # 2. Conversión de moneda: CPALead nos manda puntos, los pasamos a dólares (100 pts = $1)
+                valor_puntos = float(monto_puntos)
+                valor_usd = round(valor_puntos / 100, 2)
+                
+                # 3. Sumar el dinero real a tu usuario
+                user.saldo_tareas += valor_usd
+                
+                # 4. Registrarlo en el historial
                 registro_mision = TareasCompletadas(
                     usuario_id=user.id,
                     tarea_id=tarea_id,
-                    monto_pagado=valor_monto,
+                    monto_pagado=valor_usd,
                     estado='Aprobado'
                 )
                 db.session.add(registro_mision)
                 db.session.commit()
-                return "OK", 200
+                
+                # 5. CPALead exige que le respondamos un "1" para saber que el pago llegó bien
+                return "1", 200 
             except:
                 db.session.rollback()
-                return "Error procesando el monto numérico.", 400
-    return "Datos incompletos.", 400
+                return "0", 400
+    return "0", 400
+
 
 # --- PANEL ADMIN CONTROLES ---
 

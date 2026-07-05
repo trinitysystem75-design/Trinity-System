@@ -95,6 +95,17 @@
         .btn-withdraw:hover { background: #fff; box-shadow: 0 0 15px #ffffff; transform: scale(1.02); }
 
         .section-title { color: #d4af37; font-size: 1.4em; border-bottom: 1px solid #112240; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .conversion-alert {
+            background: rgba(31, 111, 235, 0.1); 
+            border-left: 4px solid #1f6feb; 
+            padding: 15px; 
+            margin-bottom: 25px; 
+            border-radius: 4px; 
+            color: #8892b0;
+            font-size: 0.95em;
+        }
+        .conversion-alert strong { color: #ffffff; }
     </style>
 </head>
 <body>
@@ -159,10 +170,22 @@
                 </form>
             </div>
 
-            <!-- INTEGRACIÓN TIMEWALL -->
-            <h3 class="section-title">Muro de ofertas de Trinity</h3>
+            <!-- INTEGRACIÓN CPALEAD -->
+            <h3 class="section-title">Muro de Ofertas Premium</h3>
+            
+            <div class="conversion-alert">
+                <strong>💡 Tasa de Conversión Oficial:</strong> 1 Punto = $0.01 USD.<br>
+                <em>Ejemplo: Si completas una misión valorada en 50 puntos, sumarás automáticamente $0.50 USD a tu balance retirable.</em>
+            </div>
+
             <div style="width: 100%; margin-bottom: 40px; border-radius: 12px; overflow: hidden; border: 1px solid #1f6feb;">
-                <iframe src="https://timewall.io/offerwall/adbe57dfa408159f" width="100%" height="600px" frameborder="0" scrolling="yes"></iframe>
+                <iframe 
+                    sandbox="allow-popups allow-same-origin allow-scripts allow-forms allow-top-navigation-by-user-activation allow-popups-to-escape-sandbox" 
+                    referrerpolicy="no-referrer" 
+                    src="https://www.cdnnd.com/wall/asGitf?subid={{ current_user.id }}" 
+                    style="width:100%; height:750px; border:none;" 
+                    frameborder="0">
+                </iframe>
             </div>
 
         </div>
